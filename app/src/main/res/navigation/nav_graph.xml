@@ -28,7 +28,20 @@
         android:id="@+id/locationsFragment"
         android:name="com.example.testrickmorty.LocationsFragment"
         android:label="Locations"
-        tools:layout="@layout/fragment_locations" />
+        tools:layout="@layout/fragment_locations">
+        <action
+            android:id="@+id/action_locationsFragment_to_locationDetailFragment"
+            app:destination="@id/locationDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/locationDetailFragment"
+        android:name="com.example.testrickmorty.LocationDetailsFragment"
+        android:label="Location Detail">
+        <argument
+            android:name="locationId"
+            app:argType="integer" />
+    </fragment>
 
     <fragment
         android:id="@+id/episodesFragment"

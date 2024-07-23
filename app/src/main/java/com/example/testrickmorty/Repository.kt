@@ -116,7 +116,8 @@ class Repository(
                     id = 0,
                     name = characterEntity.location ?: "Unknown",
                     type = "",
-                    dimension = ""
+                    dimension = "",
+                    residents = emptyList() // Add this line
                 ),
                 image = characterEntity.image,
                 episode = characterEntity.episode,
@@ -135,7 +136,8 @@ class Repository(
                 id = locationEntity.id,
                 name = locationEntity.name,
                 type = locationEntity.type,
-                dimension = locationEntity.dimension
+                dimension = locationEntity.dimension,
+                residents = emptyList() // Provide an empty list here
             )
         }
         Log.d("Repository", "Cached ${cachedLocations.size} locations fetched")
@@ -163,6 +165,14 @@ class Repository(
             return response.body() ?: throw Exception("Character not found")
         } else {
             throw Exception("Failed to fetch character details")
+        }
+    }
+    suspend fun getLocation(locationId: Int): Location {
+        val locationResponse = apiService.getLocation(locationId)
+        if (locationResponse.isSuccessful) {
+            return locationResponse.body() ?: throw Exception("Location not found")
+        } else {
+            throw Exception("Failed to fetch location details")
         }
     }
 }

@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.databinding.FragmentLocationsBinding
@@ -21,7 +22,12 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentLocationsBinding.bind(view)
 
-        adapter = LocationsAdapter()
+        adapter = LocationsAdapter { locationId ->
+            val bundle = Bundle().apply {
+                putInt("locationId", locationId)
+            }
+            findNavController().navigate(R.id.locationDetailFragment, bundle)
+        }
         binding.locationRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.locationRecyclerView.adapter = adapter
 

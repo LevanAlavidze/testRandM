@@ -27,6 +27,9 @@ interface ApiService {
 
     suspend fun getCharacter(@Path("id") id: Int): Response<Character>
 
+    @GET("location/{id}")
+    suspend fun getLocation(@Path("id") locationId: Int): Response<Location>
+
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"
 

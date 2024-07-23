@@ -8,7 +8,11 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.databinding.ItemLocationBinding
 
-class LocationsAdapter : ListAdapter<Location, LocationsAdapter.LocationViewHolder>(LocationDiffCallback()) {
+class LocationsAdapter(
+    private val onItemClick: (Int) -> Unit
+) : RecyclerView.Adapter<LocationsAdapter.LocationViewHolder>() {
+
+    private val locations = mutableListOf<Location>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationViewHolder {
         val binding = ItemLocationBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -16,9 +20,19 @@ class LocationsAdapter : ListAdapter<Location, LocationsAdapter.LocationViewHold
     }
 
     override fun onBindViewHolder(holder: LocationViewHolder, position: Int) {
-        val location = getItem(position)
+        val location = locations[position]
         holder.bind(location)
+        holder.itemView.setOnClickListener { onItemClick(location.id) }
     }
+
+    override fun getItemCount(): Int = locations.size
+
+    fun submitList(newLocations: List<Location>) {
+        locations.clear()
+        locations.addAll(newLocations)
+        notifyDataSetChanged()
+    }
+
 
     inner class LocationViewHolder(private val binding: ItemLocationBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(location: Location) {
