@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="character"
+            type="com.example.testrickmorty.Character" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/characterImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:src="@{character.image}" />
+
+        <TextView
+            android:id="@+id/characterName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp"
+            android:text="@{character.name}" />
+
+        <TextView
+            android:id="@+id/characterSpecies"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{character.species}" />
+
+        <TextView
+            android:id="@+id/characterStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{character.status}" />
+
+        <TextView
+            android:id="@+id/characterGender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{character.gender}" />
+    </LinearLayout>
+</layout>

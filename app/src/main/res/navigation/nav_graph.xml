@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/characterFragment">
+
+    <fragment
+        android:id="@+id/characterFragment"
+        android:name="com.example.testrickmorty.CharacterFragment"
+        android:label="Characters"
+        tools:layout="@layout/fragment_character">
+        <action
+            android:id="@+id/action_characterFragment_to_characterDetailFragment"
+            app:destination="@id/characterDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/characterDetailFragment"
+        android:name="com.example.testrickmorty.CharacterDetailFragment"
+        android:label="Character Detail">
+        <argument
+            android:name="characterId"
+            app:argType="integer" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/locationsFragment"
+        android:name="com.example.testrickmorty.LocationsFragment"
+        android:label="Locations"
+        tools:layout="@layout/fragment_locations" />
+
+    <fragment
+        android:id="@+id/episodesFragment"
+        android:name="com.example.testrickmorty.EpisodesFragment"
+        android:label="Episodes"
+        tools:layout="@layout/fragment_episodes" />
+</navigation>
