@@ -159,7 +159,6 @@ class Repository(
     }
 
     suspend fun getCharacter(characterId: Int): Character {
-        // Fetch character details from the API
         val response = apiService.getCharacter(characterId)
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("Character not found")
@@ -168,11 +167,25 @@ class Repository(
         }
     }
     suspend fun getLocation(locationId: Int): Location {
-        val locationResponse = apiService.getLocation(locationId)
-        if (locationResponse.isSuccessful) {
-            return locationResponse.body() ?: throw Exception("Location not found")
+        val response = apiService.getLocation(locationId)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Location not found")
         } else {
             throw Exception("Failed to fetch location details")
         }
     }
+    suspend fun getCharactersByUrls(urls: List<String>): List<Character> {
+        val characters = mutableListOf<Character>()
+        for (url in urls) {
+            // Fetch each character by its URL
+            try {
+                val character = apiService.getCharacterByUrl(url)
+                characters.add(character)
+            } catch (e: Exception) {
+                // Handle exceptions (e.g., log error or continue with the next URL)
+            }
+        }
+        return characters
+    }
+
 }

@@ -1,0 +1,47 @@
+<!-- res/layout/fragment_episode_details.xml -->
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <variable
+            name="episode"
+            type="com.example.testrickmorty.Episode" />
+    </data>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
+
+        <!-- Episode details -->
+        <TextView
+            android:id="@+id/episodeName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{episode.name}"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/episodeAirDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{episode.airDate}"
+            android:layout_below="@id/episodeName" />
+
+        <TextView
+            android:id="@+id/episodeEpisode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{episode.episode}"
+            android:layout_below="@id/episodeAirDate" />
+
+        <!-- RecyclerView for characters -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/characterRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/episodeEpisode"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp" />
+
+    </RelativeLayout>
+</layout>

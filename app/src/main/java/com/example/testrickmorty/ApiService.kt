@@ -12,6 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Url
 import java.io.File
 
 interface ApiService {
@@ -29,6 +30,12 @@ interface ApiService {
 
     @GET("location/{id}")
     suspend fun getLocation(@Path("id") locationId: Int): Response<Location>
+
+    @GET
+    suspend fun getCharacterByUrl(@Url url: String): Character
+
+    @GET("character")
+    suspend fun getCharactersByPage(@Query("page") page: Int): List<Character>
 
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"

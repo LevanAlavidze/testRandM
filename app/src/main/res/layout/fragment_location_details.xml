@@ -1,25 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-        <!-- Variable for Location data -->
         <variable
             name="location"
             type="com.example.testrickmorty.Location" />
-
-        <!-- Variable for the Adapter used in RecyclerView -->
-        <variable
-            name="characterAdapter"
-            type="com.example.testrickmorty.CharacterAdapter" />
     </data>
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="16dp">
 
-        <!-- TextViews for Location details -->
         <TextView
             android:id="@+id/locationName"
             android:layout_width="wrap_content"
@@ -27,6 +21,8 @@
             android:text="@{location.name}"
             android:textSize="18sp"
             android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:text="Location Name" />
 
         <TextView
@@ -34,8 +30,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@{location.type}"
-            android:layout_below="@id/locationName"
             android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/locationName"
             tools:text="Location Type" />
 
         <TextView
@@ -43,20 +40,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@{location.dimension}"
-            android:layout_below="@id/locationType"
             android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/locationType"
             tools:text="Location Dimension" />
 
-        <!-- RecyclerView for characters -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/characterRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/locationDimension"
+            android:layout_height="0dp"
             android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
-            app:adapter="@{characterAdapter}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/locationDimension"
             tools:listitem="@layout/item_character" />
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

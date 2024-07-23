@@ -1,5 +1,6 @@
 package com.example.testrickmorty
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -13,6 +14,8 @@ class CharacterAdapter(
     private val onLoadMore: () -> Unit
 ) : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
 
+    private var isLoading: Boolean = false
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ItemCharacterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return CharacterViewHolder(binding, onItemClick)
@@ -23,9 +26,13 @@ class CharacterAdapter(
         holder.bind(character)
 
         // Trigger loading more characters when reaching the end of the list
-        if (position == itemCount - 1) {
+        if (position == itemCount - 1 && !isLoading) {
             onLoadMore()
         }
+    }
+
+    fun setLoadingState(loading: Boolean) {
+        isLoading = loading
     }
 
     class CharacterViewHolder(
@@ -46,7 +53,6 @@ class CharacterAdapter(
             }
         }
     }
-
 
     class CharacterDiffCallback : DiffUtil.ItemCallback<Character>() {
         override fun areItemsTheSame(oldItem: Character, newItem: Character): Boolean {
