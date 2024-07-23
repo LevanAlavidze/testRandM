@@ -17,7 +17,7 @@
 
     <fragment
         android:id="@+id/characterDetailFragment"
-        android:name="com.example.testrickmorty.CharacterDetailFragment"
+        android:name="com.example.testrickmorty.CharacterDetailsFragment"
         android:label="Character Detail">
         <argument
             android:name="characterId"

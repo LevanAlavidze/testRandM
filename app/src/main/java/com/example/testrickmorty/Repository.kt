@@ -15,7 +15,10 @@ class Repository(
         val response = apiService.getCharacters(page)
         Log.d("Repository", "API Response: ${response.results.size} characters fetched")
         response.results.forEach { character ->
-            Log.d("Repository", "Character from API: ${character.name}, ${character.gender}, ${character.species}")
+            Log.d(
+                "Repository",
+                "Character from API: ${character.name}, ${character.gender}, ${character.species}"
+            )
         }
         return response.results
     }
@@ -37,7 +40,10 @@ class Repository(
     suspend fun saveCharactersToDatabase(characters: List<Character>) {
         Log.d("Repository", "Saving ${characters.size} characters to database")
         characters.forEach { character ->
-            Log.d("Repository", "Saving character to DB: ${character.name}, ${character.gender}, ${character.species}")
+            Log.d(
+                "Repository",
+                "Saving character to DB: ${character.name}, ${character.gender}, ${character.species}"
+            )
         }
         val characterEntities = characters.map {
             CharacterEntity(
@@ -91,7 +97,10 @@ class Repository(
     suspend fun getCachedCharacters(): List<Character> {
         Log.d("Repository", "Fetching cached characters from database")
         val cachedCharacters = characterDao.getAllCharacters().map { characterEntity ->
-            Log.d("Repository", "Cached character: ${characterEntity.name}, ${characterEntity.gender}, ${characterEntity.species}")
+            Log.d(
+                "Repository",
+                "Cached character: ${characterEntity.name}, ${characterEntity.gender}, ${characterEntity.species}"
+            )
             Character(
                 id = characterEntity.id,
                 name = characterEntity.name,
@@ -145,5 +154,15 @@ class Repository(
         }
         Log.d("Repository", "Cached ${cachedEpisodes.size} episodes fetched")
         return cachedEpisodes
+    }
+
+    suspend fun getCharacter(characterId: Int): Character {
+        // Fetch character details from the API
+        val response = apiService.getCharacter(characterId)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Character not found")
+        } else {
+            throw Exception("Failed to fetch character details")
+        }
     }
 }

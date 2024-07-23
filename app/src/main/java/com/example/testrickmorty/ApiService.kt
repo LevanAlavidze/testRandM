@@ -6,9 +6,11 @@ import android.net.NetworkCapabilities
 import okhttp3.Cache
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 import java.io.File
 
@@ -21,6 +23,9 @@ interface ApiService {
 
     @GET("episode")
     suspend fun getEpisodes(@Query("page") page: Int): EpisodeResponse
+    @GET("character/{id}")
+
+    suspend fun getCharacter(@Path("id") id: Int): Response<Character>
 
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"

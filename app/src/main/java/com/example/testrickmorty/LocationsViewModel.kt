@@ -25,9 +25,22 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
     private var isRefreshing = false
 
     init {
-        fetchLocations()
+        loadInitialData()
     }
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            try {
+                val cachedLocations = repository.getCachedLocations()
+                _locations.value = cachedLocations
+                Log.d("LocationsViewModel", "Initial cached locations: ${cachedLocations.size} items")
 
+                fetchLocations()// Fetch fresh data after loading cached data
+            } catch (e: Exception) {
+                _errorMessage.value = "Error loading initial data: ${e.message}"
+                Log.e("LocationsViewModel", "Error loading initial data: ${e.message}")
+            }
+        }
+    }
     fun fetchLocations() {
         if (isRefreshing) return
 
@@ -38,6 +51,7 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
                 val currentList = _locations.value.orEmpty()
                 _locations.value = currentList + newLocations
                 currentPage++
+                repository.saveLocationsToDatabase(newLocations)
             } catch (e: Exception) {
                 Log.e("LocationsViewModel", "Error fetching locations", e)
                 _errorMessage.value = "Error fetching locations: ${e.message}"

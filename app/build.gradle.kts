@@ -43,9 +43,10 @@ android {
     }
 }
 
+
 dependencies {
     implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.4.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.5.0")
     implementation("androidx.activity:activity-ktx:1.4.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.2")
@@ -56,6 +57,7 @@ dependencies {
     implementation ("com.google.android.material:material:1.9.0")
     implementation (libs.androidx.fragment)
 
+
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
@@ -63,8 +65,8 @@ dependencies {
     kapt("androidx.room:room-compiler:2.6.1")
 
     //navigation
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
+    implementation ("androidx.navigation:navigation-fragment-ktx:2.7.7")
+    implementation ("androidx.navigation:navigation-ui-ktx:2.7.7")
     //ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
     //LiveData

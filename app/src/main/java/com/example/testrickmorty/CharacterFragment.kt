@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.testrickmorty.databinding.FragmentCharacterBinding
 
@@ -23,10 +24,21 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
         binding = FragmentCharacterBinding.bind(view)
 
-        adapter = CharacterAdapter {
-            Log.d("CharacterFragment", "Load more characters")
-            viewModel.fetchNextPage()
-        }
+        //modified
+        adapter = CharacterAdapter(
+            onItemClick = { characterId ->
+                val bundle = Bundle().apply {
+                    putInt("characterId", characterId)
+                }
+                findNavController().navigate(R.id.characterDetailFragment, bundle)
+            },
+            onLoadMore = {
+                Log.d("CharacterFragment", "Load more characters")
+                viewModel.fetchNextPage()
+            }
+        )
+
+
         binding.characterRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.characterRecyclerView.adapter = adapter
 

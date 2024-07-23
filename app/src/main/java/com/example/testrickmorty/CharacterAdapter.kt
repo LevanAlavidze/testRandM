@@ -8,24 +8,30 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.testrickmorty.databinding.ItemCharacterBinding
 
-class CharacterAdapter(private val onLoadMore: () -> Unit) : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
+class CharacterAdapter(
+    private val onItemClick: (Int) -> Unit,
+    private val onLoadMore: () -> Unit
+) : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ItemCharacterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return CharacterViewHolder(binding)
+        return CharacterViewHolder(binding, onItemClick)
     }
 
     override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
         val character = getItem(position)
         holder.bind(character)
 
-        // Load more characters when reaching the end of the list
+        // Trigger loading more characters when reaching the end of the list
         if (position == itemCount - 1) {
             onLoadMore()
         }
     }
 
-    class CharacterViewHolder(private val binding: ItemCharacterBinding) : RecyclerView.ViewHolder(binding.root) {
+    class CharacterViewHolder(
+        private val binding: ItemCharacterBinding,
+        private val onItemClick: (Int) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(character: Character) {
             binding.character = character
             binding.executePendingBindings()
@@ -35,6 +41,9 @@ class CharacterAdapter(private val onLoadMore: () -> Unit) : ListAdapter<Charact
                 .placeholder(R.drawable.placeholder) // Use Glide placeholder
                 .error(R.drawable.error) // Use Glide error image
                 .into(binding.characterImage)
+            binding.root.setOnClickListener {
+                onItemClick(character.id)
+            }
         }
     }
 
