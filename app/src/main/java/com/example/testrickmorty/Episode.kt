@@ -9,7 +9,8 @@ data class Episode(
     val id: Int,
     val name: String,
     val episode: String,
-    val airDate: String?
+    val airDate: String?,
+    val characters: List<String>
 )
 
 data class Info(

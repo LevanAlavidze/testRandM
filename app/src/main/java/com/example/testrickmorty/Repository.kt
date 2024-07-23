@@ -151,7 +151,8 @@ class Repository(
                 id = episodeEntity.id,
                 name = episodeEntity.name,
                 episode = episodeEntity.episode,
-                airDate = episodeEntity.airDate
+                airDate = episodeEntity.airDate,
+                characters = emptyList()
             )
         }
         Log.d("Repository", "Cached ${cachedEpisodes.size} episodes fetched")
@@ -186,6 +187,14 @@ class Repository(
             }
         }
         return characters
+    }
+    suspend fun getEpisode(episodeId: Int): Episode {
+        val response = apiService.getEpisode(episodeId)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Episode not found")
+        } else {
+            throw Exception("Failed to fetch episode details")
+        }
     }
 
 }

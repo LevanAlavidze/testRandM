@@ -7,11 +7,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.databinding.ItemEpisodeBinding
 
-class EpisodeAdapter(private val onLoadMore: () -> Unit) : ListAdapter<Episode, EpisodeAdapter.EpisodeViewHolder>(EpisodeDiffCallback()) {
+class EpisodeAdapter(
+    private val onItemClick: (Int) -> Unit, // Added parameter
+    private val onLoadMore: () -> Unit
+) : ListAdapter<Episode, EpisodeAdapter.EpisodeViewHolder>(EpisodeDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EpisodeViewHolder {
         val binding = ItemEpisodeBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return EpisodeViewHolder(binding)
+        return EpisodeViewHolder(binding, onItemClick) // Pass onItemClick to ViewHolder
     }
 
     override fun onBindViewHolder(holder: EpisodeViewHolder, position: Int) {
@@ -24,10 +27,15 @@ class EpisodeAdapter(private val onLoadMore: () -> Unit) : ListAdapter<Episode, 
         }
     }
 
-    class EpisodeViewHolder(private val binding: ItemEpisodeBinding) : RecyclerView.ViewHolder(binding.root) {
+    class EpisodeViewHolder(
+        private val binding: ItemEpisodeBinding,
+        private val onItemClick: (Int) -> Unit // Receive onItemClick
+    ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(episode: Episode) {
             binding.episode = episode
-            binding.executePendingBindings()
+            binding.root.setOnClickListener {
+                onItemClick(episode.id) // Call onItemClick with episode ID
+            }
         }
     }
 

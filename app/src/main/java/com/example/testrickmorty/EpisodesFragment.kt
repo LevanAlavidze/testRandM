@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.testrickmorty.databinding.FragmentEpisodesBinding
 
@@ -20,9 +21,17 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentEpisodesBinding.bind(view)
 
-        adapter = EpisodeAdapter {
-            viewModel.fetchNextPage()
-        }
+        adapter = EpisodeAdapter(
+            onItemClick = { episodeId -> // Handle item click
+                val bundle = Bundle().apply {
+                    putInt("episodeId", episodeId)
+                }
+                findNavController().navigate(R.id.episodeDetailFragment, bundle)
+            },
+            onLoadMore = {
+                viewModel.fetchNextPage()
+            }
+        )
         binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.episodeRecyclerView.adapter = adapter
 
@@ -34,14 +43,9 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
             adapter.submitList(episodes)
         }
 
-
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.swipeRefreshLayout.isRefreshing = isLoading
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.swipeRefreshLayout.isRefreshing = isLoading
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->

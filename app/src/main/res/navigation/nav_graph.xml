@@ -5,6 +5,7 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/characterFragment">
 
+    <!-- Character Fragment -->
     <fragment
         android:id="@+id/characterFragment"
         android:name="com.example.testrickmorty.CharacterFragment"
@@ -15,6 +16,7 @@
             app:destination="@id/characterDetailFragment" />
     </fragment>
 
+    <!-- Character Detail Fragment -->
     <fragment
         android:id="@+id/characterDetailFragment"
         android:name="com.example.testrickmorty.CharacterDetailsFragment"
@@ -22,8 +24,15 @@
         <argument
             android:name="characterId"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_characterDetailFragment_to_episodeDetailFragment"
+            app:destination="@id/episodeDetailFragment" />
+        <action
+            android:id="@+id/action_characterDetailFragment_to_locationDetailFragment"
+            app:destination="@id/locationDetailFragment" />
     </fragment>
 
+    <!-- Locations Fragment -->
     <fragment
         android:id="@+id/locationsFragment"
         android:name="com.example.testrickmorty.LocationsFragment"
@@ -34,6 +43,7 @@
             app:destination="@id/locationDetailFragment" />
     </fragment>
 
+    <!-- Location Detail Fragment -->
     <fragment
         android:id="@+id/locationDetailFragment"
         android:name="com.example.testrickmorty.LocationDetailsFragment"
@@ -43,9 +53,25 @@
             app:argType="integer" />
     </fragment>
 
+    <!-- Episodes Fragment -->
     <fragment
         android:id="@+id/episodesFragment"
         android:name="com.example.testrickmorty.EpisodesFragment"
         android:label="Episodes"
-        tools:layout="@layout/fragment_episodes" />
+        tools:layout="@layout/fragment_episodes">
+        <action
+            android:id="@+id/action_episodesFragment_to_episodeDetailFragment"
+            app:destination="@id/episodeDetailFragment" />
+    </fragment>
+
+    <!-- Episode Detail Fragment -->
+    <fragment
+        android:id="@+id/episodeDetailFragment"
+        android:name="com.example.testrickmorty.EpisodeDetailsFragment"
+        android:label="Episode Detail">
+        <argument
+            android:name="episodeId"
+            app:argType="integer" />
+    </fragment>
+
 </navigation>
