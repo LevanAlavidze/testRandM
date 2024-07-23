@@ -1,6 +1,7 @@
 package com.example.testrickmorty
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -24,6 +25,14 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         }
         binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.episodeRecyclerView.adapter = adapter
+
+        viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
+            Log.d("EpisodesFragment", "Updating episodes list with ${episodes.size} items")
+            episodes.forEach { episode ->
+                Log.d("EpisodesFragment", "Episode: ${episode.name} (${episode.episode})")
+            }
+            adapter.submitList(episodes)
+        }
 
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
