@@ -17,7 +17,12 @@ data class Character(
     val episode: List<String>,
     val url: String,
     val created: String
-)
+) {
+      // Extract ID from URL for origin
+    fun getOriginId(): Int? {
+        return origin.url.substringAfterLast("/").toIntOrNull()
+    }
+}
 
 data class Origin(
     val name: String,

@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -26,6 +28,16 @@ class CharacterDetailsFragment : Fragment(R.layout.fragment_character_details) {
 
         binding = FragmentCharacterDetailsBinding.bind(view)
 
+        val episodeAdapter = EpisodeAdapter { episodeId ->
+            val bundle = Bundle().apply {
+                putInt("episodeId", episodeId)
+            }
+            findNavController().navigate(R.id.episodeDetailFragment, bundle)
+        }
+
+        binding.episodeRecyclerView.layoutManager = LinearLayoutManager(context)
+        binding.episodeRecyclerView.adapter = episodeAdapter
+
         viewModel.character.observe(viewLifecycleOwner) { character ->
             character?.let {
                 binding.characterName.text = it.name
@@ -41,8 +53,32 @@ class CharacterDetailsFragment : Fragment(R.layout.fragment_character_details) {
             }
         }
 
+        viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
+            episodes?.let {
+                episodeAdapter.submitList(it)
+            }
+        }
+
+        binding.characterLocation.setOnClickListener {
+            val locationId = viewModel.character.value?.getOriginId() ?: return@setOnClickListener
+            val bundle = Bundle().apply {
+                putInt("locationId", locationId)
+            }
+            findNavController().navigate(R.id.locationDetailFragment, bundle)
+        }
+
+        binding.characterOrigin.setOnClickListener {
+            val originId = viewModel.character.value?.getOriginId() ?: return@setOnClickListener
+            val bundle = Bundle().apply {
+                putInt("locationId", originId)
+            }
+            findNavController().navigate(R.id.locationDetailFragment, bundle)
+        }
+
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            message?.let {
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

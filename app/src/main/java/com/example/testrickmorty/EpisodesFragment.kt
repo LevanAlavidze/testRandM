@@ -27,9 +27,6 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
                     putInt("episodeId", episodeId)
                 }
                 findNavController().navigate(R.id.episodeDetailFragment, bundle)
-            },
-            onLoadMore = {
-                viewModel.fetchNextPage()
             }
         )
         binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)

@@ -11,20 +11,23 @@ class CharacterDetailsViewModel(private val repository: Repository, private val 
     private val _character = MutableLiveData<Character?>()
     val character: LiveData<Character?> get() = _character
 
+    private val _episodes = MutableLiveData<List<Episode>>()
+    val episodes: LiveData<List<Episode>> get() = _episodes
+
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
     init {
-        fetchCharacterDetails()
-    }
-
-    private fun fetchCharacterDetails() {
         viewModelScope.launch {
             try {
                 val character = repository.getCharacter(characterId)
                 _character.value = character
+
+                val episodeUrls = character.episode
+                val episodes = repository.getEpisodesByUrls(episodeUrls)
+                _episodes.value = episodes
             } catch (e: Exception) {
-                _errorMessage.value = "Error fetching character details: ${e.message}"
+                _errorMessage.value = e.message
             }
         }
     }

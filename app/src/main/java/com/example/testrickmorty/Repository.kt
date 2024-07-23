@@ -196,5 +196,15 @@ class Repository(
             throw Exception("Failed to fetch episode details")
         }
     }
+    suspend fun getEpisodesByUrls(urls: List<String>): List<Episode> {
+        return urls.mapNotNull { url ->
+            try {
+                val episodeId = url.substringAfterLast("/").toIntOrNull()
+                episodeId?.let { getEpisode(it) }
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
 
 }

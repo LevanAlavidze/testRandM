@@ -1,6 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android">
-
     <data>
         <variable
             name="character"
@@ -54,13 +52,28 @@
                 android:id="@+id/characterLocation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{character.location.name}" />
+                android:text="@{character.location.name}"
+                android:paddingTop="8dp" />
 
             <TextView
                 android:id="@+id/characterOrigin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@{character.origin.name}" />
+                android:text="@{character.origin.name}"
+                android:paddingTop="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Episodes"
+                android:textStyle="bold"
+                android:paddingTop="16dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/episodeRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"/>
         </LinearLayout>
     </ScrollView>
 </layout>
