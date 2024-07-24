@@ -218,5 +218,8 @@ class Repository(
     suspend fun filterEpisodes(season: String): EpisodeResponse {
         return apiService.filterEpisodes(season)
     }
+    suspend fun searchLocations(query: String): LocationResponse {
+        return apiService.searchLocations(query)
+    }
 
 }

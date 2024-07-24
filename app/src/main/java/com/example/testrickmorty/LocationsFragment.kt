@@ -1,10 +1,12 @@
 package com.example.testrickmorty
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
@@ -52,7 +54,6 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             Log.d("LocationsFragment", "Loading State: $isLoading")
             binding.swipeRefreshLayout.isRefreshing = isLoading
-            // Only disable swipeRefreshLayout when loading is finished
             if (!isLoading) {
                 binding.swipeRefreshLayout.isEnabled = true
             }
@@ -63,7 +64,28 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
             viewModel.refreshLocations()
         }
 
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                if (query != null) {
+                    viewModel.searchLocations(query)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText.isNullOrBlank()) {
+                    viewModel.searchLocations("")
+                }
+                return true
+            }
+        })
+
         Log.d("LocationsFragment", "Initial Fetch Triggered")
-        viewModel.fetchLocations()
+        viewModel.fetchLocations(1)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        viewModel.locations.value?.let { adapter.submitList(it.toList()) }
     }
 }

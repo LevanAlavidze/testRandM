@@ -49,6 +49,9 @@ interface ApiService {
     @GET("character")
     suspend fun searchCharacters(@Query("name") query: String): CharacterResponse
 
+    @GET("location")
+    suspend fun searchLocations(@Query("name") query: String): LocationResponse
+
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"
 

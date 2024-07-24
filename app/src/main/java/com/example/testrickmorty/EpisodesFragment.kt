@@ -1,5 +1,6 @@
 package com.example.testrickmorty
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -89,5 +90,9 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
                 return true
             }
         })
+    }
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        viewModel.episodes.value?.let { adapter.submitList(it.toList()) }
     }
 }

@@ -23,10 +23,14 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
 
     private var currentPage = 1
     private var isRefreshing = false
+    private var isLastPage = false
+    private var currentSearchQuery: String? = null
+    private val searchResults = mutableListOf<Location>()
 
     init {
         loadInitialData()
     }
+
     private fun loadInitialData() {
         viewModelScope.launch {
             try {
@@ -34,23 +38,34 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
                 _locations.value = cachedLocations
                 Log.d("LocationsViewModel", "Initial cached locations: ${cachedLocations.size} items")
 
-                fetchLocations()// Fetch fresh data after loading cached data
+                fetchLocations(currentPage)
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading initial data: ${e.message}"
                 Log.e("LocationsViewModel", "Error loading initial data: ${e.message}")
             }
         }
     }
-    fun fetchLocations() {
-        if (isRefreshing) return
 
+    fun fetchLocations(page: Int) {
+        if (_isLoading.value == true || isLastPage) return
+
+        _isLoading.value = true
         viewModelScope.launch {
-            _isLoading.value = true
             try {
-                val newLocations = repository.getLocations(currentPage)
-                val currentList = _locations.value.orEmpty()
-                _locations.value = currentList + newLocations
-                currentPage++
+                val newLocations = if (currentSearchQuery != null) {
+                    val response = repository.searchLocations(currentSearchQuery!!)
+                    searchResults.addAll(response.results)
+                    response.results
+                } else {
+                    repository.getLocations(page)
+                }
+
+                val currentList = _locations.value.orEmpty().toMutableList()
+                currentList.addAll(newLocations)
+                _locations.value = currentList.distinctBy { it.id }
+
+                currentPage = page
+                isLastPage = newLocations.isEmpty()
                 repository.saveLocationsToDatabase(newLocations)
             } catch (e: Exception) {
                 Log.e("LocationsViewModel", "Error fetching locations", e)
@@ -62,12 +77,17 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun fetchNextPage() {
-        fetchLocations()
+        if (currentSearchQuery != null) {
+            fetchLocations(currentPage + 1)
+        } else {
+            fetchLocations(currentPage + 1)
+        }
     }
 
     fun refreshLocations() {
         isRefreshing = true
         currentPage = 1
+        isLastPage = false
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -83,4 +103,35 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
             }
         }
     }
+
+    fun searchLocations(query: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                if (query.isBlank()) {
+                    // Reset search and fetch all locations
+                    currentSearchQuery = null
+                    searchResults.clear()
+                    currentPage = 1
+                    isLastPage = false
+                    fetchLocations(1) // Fetch all locations
+                } else {
+                    // Perform search and update the list with search results
+                    currentSearchQuery = query
+                    currentPage = 1
+                    isLastPage = false
+                    searchResults.clear()
+                    val response = repository.searchLocations(query)
+                    searchResults.addAll(response.results)
+                    _locations.value = searchResults // Set the search results
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error searching locations: ${e.message}"
+                Log.e("LocationsViewModel", "Error searching locations", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
 }
