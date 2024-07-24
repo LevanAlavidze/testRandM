@@ -44,7 +44,7 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun fetchCharacters(page: Int) {
-        if (isLoading.value == true || isLastPage) return // Prevent multiple requests
+        if (isLoading.value == true || isLastPage || page <= currentPage) return // Prevent multiple or redundant requests
 
         _isLoading.value = true
         viewModelScope.launch {

@@ -10,9 +10,7 @@ import com.example.testrickmorty.databinding.ItemLocationBinding
 
 class LocationsAdapter(
     private val onItemClick: (Int) -> Unit
-) : RecyclerView.Adapter<LocationsAdapter.LocationViewHolder>() {
-
-    private val locations = mutableListOf<Location>()
+) : ListAdapter<Location, LocationsAdapter.LocationViewHolder>(LocationDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LocationViewHolder {
         val binding = ItemLocationBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -20,21 +18,12 @@ class LocationsAdapter(
     }
 
     override fun onBindViewHolder(holder: LocationViewHolder, position: Int) {
-        val location = locations[position]
+        val location = getItem(position)
         holder.bind(location)
         holder.itemView.setOnClickListener { onItemClick(location.id) }
     }
 
-    override fun getItemCount(): Int = locations.size
-
-    fun submitList(newLocations: List<Location>) {
-        locations.clear()
-        locations.addAll(newLocations)
-        notifyDataSetChanged()
-    }
-
-
-    inner class LocationViewHolder(private val binding: ItemLocationBinding) : RecyclerView.ViewHolder(binding.root) {
+    class LocationViewHolder(private val binding: ItemLocationBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(location: Location) {
             binding.location = location
             binding.executePendingBindings()

@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.databinding.FragmentEpisodesBinding
 
 class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
@@ -31,6 +32,19 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         )
         binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.episodeRecyclerView.adapter = adapter
+
+        // Add the scroll listener here
+        binding.episodeRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                if (lastVisibleItem >= totalItemCount - 1) {
+                    viewModel.fetchNextPage()
+                }
+            }
+        })
 
         viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
             Log.d("EpisodesFragment", "Updating episodes list with ${episodes.size} items")
