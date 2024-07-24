@@ -1,6 +1,5 @@
 package com.example.testrickmorty
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -11,10 +10,7 @@ import com.example.testrickmorty.databinding.ItemCharacterBinding
 
 class CharacterAdapter(
     private val onItemClick: (Int) -> Unit,
-    private val onLoadMore: () -> Unit
 ) : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
-
-    private var isLoading: Boolean = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = ItemCharacterBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -24,15 +20,6 @@ class CharacterAdapter(
     override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
         val character = getItem(position)
         holder.bind(character)
-
-        // Trigger loading more characters when reaching the end of the list
-        if (position == itemCount - 1 && !isLoading) {
-            onLoadMore()
-        }
-    }
-
-    fun setLoadingState(loading: Boolean) {
-        isLoading = loading
     }
 
     class CharacterViewHolder(

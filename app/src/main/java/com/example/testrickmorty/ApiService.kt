@@ -46,6 +46,9 @@ interface ApiService {
     @GET("episode")
     suspend fun filterEpisodes(@Query("episode") season: String): EpisodeResponse
 
+    @GET("character")
+    suspend fun searchCharacters(@Query("name") query: String): CharacterResponse
+
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"
 

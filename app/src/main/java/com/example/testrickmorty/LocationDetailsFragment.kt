@@ -35,11 +35,7 @@ class LocationDetailsFragment : Fragment(R.layout.fragment_location_details) {
                     putInt("characterId", characterId)
                 }
                 findNavController().navigate(R.id.characterDetailFragment, bundle)
-            },
-            onLoadMore = {
-                // Notify the adapter that more items are being loaded
-                characterAdapter.setLoadingState(true)
-                viewModel.loadMoreCharacters()
+
             }
         )
 
@@ -57,8 +53,7 @@ class LocationDetailsFragment : Fragment(R.layout.fragment_location_details) {
         viewModel.residentCharacters.observe(viewLifecycleOwner) { residents ->
             Log.d("LocationDetailsFragment", "Residents fetched: ${residents.size}")
             characterAdapter.submitList(residents)
-            // Notify the adapter that loading is complete
-            characterAdapter.setLoadingState(false)
+
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->

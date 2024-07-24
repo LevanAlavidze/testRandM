@@ -20,6 +20,8 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
 
     private var currentPage = 1
     private var isLastPage = false
+    private var currentSearchQuery: String? = null
+    private var searchResults = mutableListOf<Character>()
 
     init {
         loadInitialData()
@@ -44,36 +46,31 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun fetchCharacters(page: Int) {
-        if (isLoading.value == true || isLastPage || page <= currentPage) return // Prevent multiple or redundant requests
+        if (isLoading.value == true || isLastPage || page <= currentPage) return
 
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                Log.d("CharacterViewModel", "Fetching characters for page: $page")
-                val fetchedCharacters = repository.getCharacters(page)
-                val currentCharacters = _characters.value.orEmpty()
-                val updatedList = currentCharacters.toMutableList().apply {
-                    addAll(fetchedCharacters)
+                val fetchedCharacters = if (currentSearchQuery != null) {
+                    // Fetch next page of search results
+                    val response = repository.searchCharacters(currentSearchQuery!!)
+                    searchResults.addAll(response.results)
+                    response.results
+                } else {
+                    // Fetch regular characters
+                    repository.getCharacters(page)
                 }
-                _characters.value = updatedList
-                currentPage = page
-                isLastPage = fetchedCharacters.isEmpty() // Check if it's the last page
-                Log.d("CharacterViewModel", "Fetched characters: ${fetchedCharacters.size} items")
 
-                // Save fetched characters to the database
-                repository.saveCharactersToDatabase(fetchedCharacters)
+                // Combine current episodes with new fetched episodes and remove duplicates
+                val currentCharacters = _characters.value.orEmpty().toMutableList()
+                currentCharacters.addAll(fetchedCharacters)
+                _characters.value = currentCharacters.toList()
+
+                currentPage = page
+                isLastPage = fetchedCharacters.isEmpty() // Update isLastPage correctly
+
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching characters: ${e.message}"
-                Log.e("CharacterViewModel", "Error fetching characters: ${e.message}")
-                // Load cached data as fallback
-                try {
-                    val cachedCharacters = repository.getCachedCharacters()
-                    _characters.value = cachedCharacters
-                    Log.d("CharacterViewModel", "Loaded cached characters: ${cachedCharacters.size} items")
-                } catch (cacheException: Exception) {
-                    _errorMessage.value = "Error loading cached characters: ${cacheException.message}"
-                    Log.e("CharacterViewModel", "Error loading cached characters: ${cacheException.message}")
-                }
             } finally {
                 _isLoading.value = false
             }
@@ -83,6 +80,34 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     fun fetchNextPage() {
         if (!isLastPage) {
             fetchCharacters(currentPage + 1)
+        }
+    }
+    fun searchCharacters(query: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                if (query.isBlank()) {
+                    // Clear search query and show all characters
+                    currentSearchQuery = null
+                    searchResults.clear()
+                    currentPage = 1
+                    isLastPage = false
+                    fetchCharacters(1) // Fetch first page of all characters
+                } else {
+                    currentSearchQuery = query
+                    currentPage = 1
+                    isLastPage= false
+                    searchResults.clear()
+                    val response = repository.searchCharacters(query)
+                    _characters.value = response.results
+                    searchResults.addAll(response.results)
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching characters: ${e.message}"
+                Log.e("CharacterViewModel", "Error fetching characters", e)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }

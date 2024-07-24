@@ -212,6 +212,9 @@ class Repository(
         return apiService.searchEpisodes(query)
     }
 
+    suspend fun searchCharacters(query: String): CharacterResponse {
+        return apiService.searchCharacters(query)
+    }
     suspend fun filterEpisodes(season: String): EpisodeResponse {
         return apiService.filterEpisodes(season)
     }

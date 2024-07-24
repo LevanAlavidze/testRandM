@@ -4,12 +4,13 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.databinding.FragmentCharacterBinding
-
 
 class CharacterFragment : Fragment(R.layout.fragment_character) {
     private val viewModel: CharacterViewModel by viewModels {
@@ -31,16 +32,25 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
                     putInt("characterId", characterId)
                 }
                 findNavController().navigate(R.id.characterDetailFragment, bundle)
-            },
-            onLoadMore = {
-                Log.d("CharacterFragment", "Load more characters")
-                viewModel.fetchNextPage()
+
             }
         )
 
 
         binding.characterRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.characterRecyclerView.adapter = adapter
+
+        binding.characterRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                if (lastVisibleItem >= totalItemCount - 1) {
+                    viewModel.fetchNextPage()
+                }
+            }
+        })
 
         viewModel.characters.observe(viewLifecycleOwner) { characters ->
             Log.d("CharacterFragment", "Updating characters list with ${characters.size} items")
@@ -68,5 +78,23 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
         // Initial fetch
         viewModel.fetchCharacters(1)
+
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                if (query != null) {
+                    viewModel.searchCharacters(query)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText.isNullOrBlank()) {
+                    // Clear the search and show all characters
+                    viewModel.searchCharacters("")
+                    viewModel.fetchCharacters(1)
+                }
+                return true
+            }
+        })
     }
 }
