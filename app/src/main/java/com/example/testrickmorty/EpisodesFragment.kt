@@ -3,7 +3,9 @@ package com.example.testrickmorty
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.AdapterView
 import android.widget.Toast
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -68,5 +70,24 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         }
 
         viewModel.fetchEpisodes(1)
+
+        // Search functionality
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                if (query != null) {
+                    viewModel.searchEpisodes(query)
+                }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                if (newText.isNullOrBlank()) {
+                    // Clear the search and show all episodes
+                    viewModel.searchEpisodes("")
+                    viewModel.fetchEpisodes(1)
+                }
+                return true
+            }
+        })
     }
 }

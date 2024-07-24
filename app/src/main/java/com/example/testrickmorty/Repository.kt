@@ -207,4 +207,13 @@ class Repository(
         }
     }
 
+
+    suspend fun searchEpisodes(query: String): EpisodeResponse {
+        return apiService.searchEpisodes(query)
+    }
+
+    suspend fun filterEpisodes(season: String): EpisodeResponse {
+        return apiService.filterEpisodes(season)
+    }
+
 }

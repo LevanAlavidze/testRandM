@@ -5,7 +5,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class EpisodeViewModel(private val repository: Repository) : ViewModel() {
 
@@ -20,56 +22,75 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
 
     private var currentPage = 1
     private var isLastPage = false
+    private var currentSearchQuery: String? = null
+    private var searchResults = mutableListOf<Episode>()
 
     fun fetchEpisodes(page: Int) {
         if (isLoading.value == true || isLastPage) {
-            Log.d("EpisodeViewModel", "Fetch skipped: isLoading=${isLoading.value}, isLastPage=$isLastPage")
             return
         }
-
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val fetchedEpisodes = repository.getEpisodes(page)
-                Log.d("EpisodeViewModel", "Fetched Episodes: $fetchedEpisodes")
+                val fetchedEpisodes = if (currentSearchQuery != null) {
+                    // Fetch next page of search results
+                    val response = repository.searchEpisodes(currentSearchQuery!!)
+                    searchResults.addAll(response.results)
+                    response.results
+                } else {
+                    // Fetch regular episodes
+                    repository.getEpisodes(page)
+                }
 
-                val currentEpisodes = _episodes.value.orEmpty()
-                Log.d("EpisodeViewModel", "Current Episodes: $currentEpisodes")
+                // Combine current episodes with new fetched episodes and remove duplicates
+                val currentEpisodes = _episodes.value.orEmpty().toMutableSet()
+                currentEpisodes.addAll(fetchedEpisodes)
+                _episodes.value = currentEpisodes.toList()
 
-                val updatedList = currentEpisodes.toMutableList().apply { addAll(fetchedEpisodes) }
-                Log.d("EpisodeViewModel", "Updated Episodes List: $updatedList")
-
-                _episodes.value = updatedList
                 currentPage = page
-                isLastPage = fetchedEpisodes.isEmpty()
+                isLastPage = fetchedEpisodes.isEmpty() // Update isLastPage correctly
 
-                repository.saveEpisodesToDatabase(fetchedEpisodes)
-                Log.d("EpisodeViewModel", "Episodes saved to database")
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching episodes: ${e.message}"
                 Log.e("EpisodeViewModel", "Error fetching episodes", e)
-
-                try {
-                    val cachedEpisodes = repository.getCachedEpisodes()
-                    Log.d("EpisodeViewModel", "Cached Episodes: $cachedEpisodes")
-
-                    _episodes.value = cachedEpisodes
-                } catch (cacheException: Exception) {
-                    _errorMessage.value += "\nError loading cached episodes: ${cacheException.message}"
-                    Log.e("EpisodeViewModel", "Error loading cached episodes", cacheException)
-                }
             } finally {
                 _isLoading.value = false
-                Log.d("EpisodeViewModel", "Loading state set to false")
             }
         }
     }
 
-
-
     fun fetchNextPage() {
         if (!isLastPage) {
             fetchEpisodes(currentPage + 1)
+        }
+    }
+
+    fun searchEpisodes(query: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                if (query.isBlank()) {
+                    // Clear search query and show all episodes
+                    currentSearchQuery = null
+                    searchResults.clear()
+                    currentPage = 1
+                    isLastPage = false
+                    fetchEpisodes(1) // Fetch first page of all episodes
+                } else {
+                    currentSearchQuery = query
+                    currentPage = 1
+                    isLastPage = false
+                    searchResults.clear()
+                    val response = repository.searchEpisodes(query)
+                    _episodes.value = response.results
+                    searchResults.addAll(response.results)
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching episodes: ${e.message}"
+                Log.e("EpisodeViewModel", "Error fetching episodes", e)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }
