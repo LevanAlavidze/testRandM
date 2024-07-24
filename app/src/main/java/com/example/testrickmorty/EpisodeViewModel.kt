@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 
 class EpisodeViewModel(private val repository: Repository) : ViewModel() {
 
@@ -24,43 +25,50 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
     private var isLastPage = false
     private var currentSearchQuery: String? = null
     private var searchResults = mutableListOf<Episode>()
+    private val pageLoadingStates = mutableMapOf<Int, Boolean>()
 
     fun fetchEpisodes(page: Int) {
-        if (isLoading.value == true || isLastPage) {
+        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
             return
         }
+
+        pageLoadingStates[page] = true
         _isLoading.value = true
         viewModelScope.launch {
             try {
                 val fetchedEpisodes = if (currentSearchQuery != null) {
-                    // Fetch next page of search results
                     val response = repository.searchEpisodes(currentSearchQuery!!)
-                    searchResults.addAll(response.results)
                     response.results
                 } else {
-                    // Fetch regular episodes
                     repository.getEpisodes(page)
                 }
 
                 // Combine current episodes with new fetched episodes and remove duplicates
-                val currentEpisodes = _episodes.value.orEmpty().toMutableSet()
+                val currentEpisodes = _episodes.value.orEmpty().toMutableList()
                 currentEpisodes.addAll(fetchedEpisodes)
-                _episodes.value = currentEpisodes.toList()
+                _episodes.value = currentEpisodes.distinctBy { it.id }
 
                 currentPage = page
-                isLastPage = fetchedEpisodes.isEmpty() // Update isLastPage correctly
-
+                isLastPage = fetchedEpisodes.isEmpty()
+            } catch (e: HttpException) {
+                if (e.code() == 404) {
+                    isLastPage = true
+                } else {
+                    _errorMessage.value = "Error fetching episodes: ${e.message()}"
+                    Log.e("EpisodeViewModel", "Error fetching episodes", e)
+                }
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching episodes: ${e.message}"
                 Log.e("EpisodeViewModel", "Error fetching episodes", e)
             } finally {
                 _isLoading.value = false
+                pageLoadingStates[page] = false
             }
         }
     }
 
     fun fetchNextPage() {
-        if (!isLastPage) {
+        if (!isLastPage && pageLoadingStates[currentPage + 1] != true) {
             fetchEpisodes(currentPage + 1)
         }
     }
@@ -75,12 +83,14 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
                     searchResults.clear()
                     currentPage = 1
                     isLastPage = false
+                    pageLoadingStates.clear()
                     fetchEpisodes(1) // Fetch first page of all episodes
                 } else {
                     currentSearchQuery = query
                     currentPage = 1
                     isLastPage = false
                     searchResults.clear()
+                    pageLoadingStates.clear()
                     val response = repository.searchEpisodes(query)
                     _episodes.value = response.results
                     searchResults.addAll(response.results)

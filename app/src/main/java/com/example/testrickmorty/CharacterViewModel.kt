@@ -22,6 +22,7 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     private var isLastPage = false
     private var currentSearchQuery: String? = null
     private var searchResults = mutableListOf<Character>()
+    private val pageLoadingStates = mutableMapOf<Int, Boolean>()
 
     init {
         loadInitialData()
@@ -31,12 +32,9 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             try {
                 Log.d("CharacterViewModel", "Loading initial data")
-                // Load cached data initially
                 val cachedCharacters = repository.getCachedCharacters()
                 _characters.value = cachedCharacters
                 Log.d("CharacterViewModel", "Initial cached characters: ${cachedCharacters.size} items")
-
-                // Fetch the first page of characters from the network
                 fetchCharacters(currentPage)
             } catch (e: Exception) {
                 _errorMessage.value = "Error loading initial data: ${e.message}"
@@ -46,58 +44,58 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun fetchCharacters(page: Int) {
-        if (isLoading.value == true || isLastPage || page <= currentPage) return
+        if (isLoading.value == true || isLastPage || page <= currentPage || pageLoadingStates[page] == true) return
 
+        pageLoadingStates[page] = true
         _isLoading.value = true
         viewModelScope.launch {
             try {
                 val fetchedCharacters = if (currentSearchQuery != null) {
-                    // Fetch next page of search results
                     val response = repository.searchCharacters(currentSearchQuery!!)
-                    searchResults.addAll(response.results)
                     response.results
                 } else {
-                    // Fetch regular characters
                     repository.getCharacters(page)
                 }
 
-                // Combine current episodes with new fetched episodes and remove duplicates
                 val currentCharacters = _characters.value.orEmpty().toMutableList()
                 currentCharacters.addAll(fetchedCharacters)
-                _characters.value = currentCharacters.toList()
+                _characters.value = currentCharacters.distinctBy { it.id } // Ensure no duplicates
 
                 currentPage = page
-                isLastPage = fetchedCharacters.isEmpty() // Update isLastPage correctly
-
+                isLastPage = fetchedCharacters.isEmpty()
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching characters: ${e.message}"
             } finally {
                 _isLoading.value = false
+                pageLoadingStates[page] = false
             }
         }
     }
 
     fun fetchNextPage() {
-        if (!isLastPage) {
+        if (!isLastPage && pageLoadingStates[currentPage + 1] != true) {
             fetchCharacters(currentPage + 1)
         }
     }
+
     fun searchCharacters(query: String) {
         _isLoading.value = true
         viewModelScope.launch {
             try {
                 if (query.isBlank()) {
-                    // Clear search query and show all characters
                     currentSearchQuery = null
                     searchResults.clear()
                     currentPage = 1
                     isLastPage = false
-                    fetchCharacters(1) // Fetch first page of all characters
+                    pageLoadingStates.clear()
+                    val allCharacters = repository.getCharacters(1)
+                    _characters.value = allCharacters
                 } else {
                     currentSearchQuery = query
                     currentPage = 1
-                    isLastPage= false
+                    isLastPage = false
                     searchResults.clear()
+                    pageLoadingStates.clear()
                     val response = repository.searchCharacters(query)
                     _characters.value = response.results
                     searchResults.addAll(response.results)
