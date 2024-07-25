@@ -116,7 +116,6 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
             if (noResults) {
                 // Show a message or UI indicating no results
                 Toast.makeText(requireContext(), "No episodes found", Toast.LENGTH_SHORT).show()
-
             }
         }
 
@@ -143,7 +142,6 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
                 }
                 return true
             }
-
         })
     }
     override fun onConfigurationChanged(newConfig: Configuration) {

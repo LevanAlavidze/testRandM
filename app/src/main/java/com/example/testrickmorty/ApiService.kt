@@ -55,11 +55,11 @@ interface ApiService {
 
     @GET("character")
     suspend fun getFilteredCharacters(
-        @Query("status") status: String = "alive", // Default to avoid errors
-        @Query("gender") gender: String = "",
-        @Query("species") species: String = "",
-        @Query("type") type: String = "",
-        @Query("name") name: String = ""
+        @Query("status") status: String? = "alive", // Default to avoid errors
+        @Query("gender") gender: String? = "",
+        @Query("species") species: String? = "",
+        @Query("page") page: Int
+
     ): CharacterResponse
 
     @GET("location")

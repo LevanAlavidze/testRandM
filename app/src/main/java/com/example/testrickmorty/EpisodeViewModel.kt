@@ -25,7 +25,6 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
     private var currentPage = 1
     private var isLastPage = false
     private var currentSearchQuery: String? = null
-    private var searchResults = mutableListOf<Episode>()
     private val pageLoadingStates = mutableMapOf<Int, Boolean>()
     private var isFiltering = false
     private var filterName: String = ""

@@ -229,29 +229,10 @@ class Repository(
         return apiService.searchLocations(query)
     }
 
-    suspend fun getFilteredCharacters(
-        status: String,
-        gender: String,
-        species: String,
-        type: String,
-        name: String
-    ): List<Character> {
-        Log.d("Repository", "Filtering characters with status: $status, gender: $gender, species: $species, type: $type, name: $name")
-        return try {
-            val response = apiService.getFilteredCharacters(status, gender, species, type, name)
-            Log.d("Repository", "Filtered characters response: ${response.results.size} items")
-            response.results
-        } catch (e: HttpException) {
-            Log.e("Repository", "HTTP error during filtering: ${e.code()} - ${e.message()}")
-            emptyList()
-        } catch (e: IOException) {
-            Log.e("Repository", "IO error during filtering: ${e.message}")
-            emptyList()
-        } catch (e: Exception) {
-            Log.e("Repository", "Unexpected error during filtering: ${e.message}")
-            emptyList()
-        }
+    suspend fun getFilteredCharacters(status: String?, gender: String?, species: String?, page: Int): List<Character> {
+        return apiService.getFilteredCharacters(status, gender, species, page).results
     }
+
 
 /*
     suspend fun getFilteredEpisodes(name: String, episode: String): List<Episode> {

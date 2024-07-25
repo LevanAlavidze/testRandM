@@ -29,7 +29,7 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             val type = filters["type"] ?: ""
             val name = filters["name"] ?: ""
 
-            viewModel.fetchFilteredCharacters(status, gender, species, type, name)
+            viewModel.fetchFilteredCharacters(status, gender, species)
         }
         filterFragment.show(parentFragmentManager, "FilterDialog")
     }
@@ -39,14 +39,12 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
         Log.d("CharacterFragment", "Fragment view created")
         binding = FragmentCharacterBinding.bind(view)
 
-        adapter = CharacterAdapter(
-            onItemClick = { characterId ->
+        adapter = CharacterAdapter{ characterId ->
                 val bundle = Bundle().apply {
                     putInt("characterId", characterId)
                 }
                 findNavController().navigate(R.id.characterDetailFragment, bundle)
             }
-        )
 
         binding.btnFilter.setOnClickListener {
             showFilterDialog()
@@ -66,12 +64,7 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
                 }
             }
         })
-
         viewModel.characters.observe(viewLifecycleOwner) { characters ->
-            Log.d("CharacterFragment", "Updating characters list with ${characters.size} items")
-            characters.forEach { character ->
-                Log.d("CharacterFragment", "Character: ${character.name}, ${character.species}")
-            }
             adapter.submitList(characters)
         }
 
@@ -86,13 +79,18 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             Log.d("CharacterFragment", "Error message: $message")
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
+        viewModel.noResults.observe(viewLifecycleOwner) { noResults ->
+            if (noResults) {
+                // Show a message or UI indicating no results
+                Toast.makeText(requireContext(), "No characters found", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
             Log.d("CharacterFragment", "Refreshing characters")
             viewModel.fetchCharacters(1)
         }
         viewModel.fetchCharacters(1)
-
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -103,9 +101,12 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText.isNullOrBlank()) {
-                    viewModel.searchCharacters("") // Clear the search query
+                if (newText.isNullOrEmpty()) {
+                    if (newText != null) {
+                        viewModel.searchCharacters(newText)
+                    }
                     viewModel.fetchCharacters(1)
+
                 }
                 return true
             }
