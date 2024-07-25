@@ -71,8 +71,9 @@ interface ApiService {
 
     @GET("episode")
     suspend fun getFilteredEpisodes(
-        @Query("name") name: String?,
-        @Query("episode") episode: String?
+        @Query("name") name: String,
+        @Query("episode") episode: String,
+        @Query("page") page: Int
     ): EpisodeResponse
 
 

@@ -253,6 +253,7 @@ class Repository(
         }
     }
 
+/*
     suspend fun getFilteredEpisodes(name: String, episode: String): List<Episode> {
         val nameQuery = if (name.isNotEmpty()) name else null
         val episodeQuery = if (episode.isNotEmpty()) episode else null
@@ -276,5 +277,14 @@ class Repository(
             emptyList()
         }
     }
+*/
+
+    suspend fun getFilteredEpisodes(name: String, episode: String, page: Int): List<Episode> {
+        // Assuming apiService has a method that supports filtering by name and episode with pagination
+        val response = apiService.getFilteredEpisodes(name, episode, page)
+        return response.results
+    }
+
+
 
 }
