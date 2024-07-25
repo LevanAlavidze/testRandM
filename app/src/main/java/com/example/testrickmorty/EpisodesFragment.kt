@@ -32,42 +32,11 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         filterFragment.show(parentFragmentManager, "FilterDialog")
     }
 
-/*    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentEpisodesBinding.bind(view)
 
-
-        adapter = EpisodeAdapter(
-            onItemClick = { episodeId -> // Handle item click
-                val bundle = Bundle().apply {
-                    putInt("episodeId", episodeId)
-                }
-                findNavController().navigate(R.id.episodeDetailFragment, bundle)
-            }
-        )
-        binding.btnFilter.setOnClickListener {
-            showFilterDialog()
-        }
-        binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
-        binding.episodeRecyclerView.adapter = adapter
-
-        binding.episodeRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                val layoutManager = recyclerView.layoutManager as GridLayoutManager
-                val totalItemCount = layoutManager.itemCount
-                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-                if (lastVisibleItem >= totalItemCount - 1) {
-                    viewModel.fetchNextPage()
-                }
-            }
-        })*/
-
-        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            super.onViewCreated(view, savedInstanceState)
-            binding = FragmentEpisodesBinding.bind(view)
-
-            adapter = EpisodeAdapter { episodeId ->
+        adapter = EpisodeAdapter { episodeId ->
                 val bundle = Bundle().apply {
                     putInt("episodeId", episodeId)
                 }
@@ -90,15 +59,6 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
                     }
                 }
             })
-
-
-/*        viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
-            Log.d("EpisodesFragment", "Updating episodes list with ${episodes.size} items")
-            episodes.forEach { episode ->
-                Log.d("EpisodesFragment", "Episode: ${episode.name} (${episode.episode})")
-            }
-            adapter.submitList(episodes)
-        }*/
             viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
                 adapter.submitList(episodes)
             }
@@ -122,7 +82,6 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         binding.swipeRefreshLayout.setOnRefreshListener {
             viewModel.fetchEpisodes(1)
         }
-
         viewModel.fetchEpisodes(1)
 
         // Search functionality

@@ -30,6 +30,7 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     private var filterStatus: String? = null
     private var filterGender: String? = null
     private var filterSpecies: String? = null
+    private var filterName: String? = null
 
     fun fetchCharacters(page: Int) {
         if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
@@ -79,21 +80,22 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     fun searchCharacters(query: String) {
         currentSearchQuery = query
         isFiltering = query.isNotBlank()
-        fetchFilteredCharacters(query, "", "", 1)
-}
-    fun fetchFilteredCharacters(status: String?, gender: String?, species: String?, page: Int = 1) {
+        fetchFilteredCharacters(name = query, status = "", species = "", gender = "", page = 1)
+    }
+
+    fun fetchFilteredCharacters(name: String, status: String, species: String, gender: String, page: Int = 1) {
         _isLoading.value = true
         isFiltering = true
         currentPage = page
         isLastPage = false
+        filterName = name
         filterStatus = status
-        filterGender = gender
         filterSpecies = species
+        filterGender = gender
         pageLoadingStates.clear()
 
         viewModelScope.launch {
-            try {
-                val filteredCharacters = repository.getFilteredCharacters(status, gender, species, page)
+            try {val filteredCharacters = repository.getFilteredCharacters(name, status, species, gender, page)
                 if (filteredCharacters.isEmpty()) {
                     _noResults.value = true
                     _characters.value = emptyList()
@@ -116,16 +118,16 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
             }
         }
     }
+
     private fun fetchFilteredCharactersNextPage(page: Int) {
-        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
-            return
+        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {return
         }
 
         pageLoadingStates[page] = true
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val fetchedCharacters = repository.getFilteredCharacters(filterStatus, filterGender, filterSpecies, page)
+                val fetchedCharacters = repository.getFilteredCharacters(filterName!!, filterStatus!!, filterSpecies!!, filterGender!!, page)
 
                 val currentCharacters = _characters.value.orEmpty().toMutableList().apply { addAll(fetchedCharacters) }
                 _characters.value = currentCharacters.distinctBy { it.id }

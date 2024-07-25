@@ -23,13 +23,13 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
     private fun showFilterDialog() {
         val filterFragment = FilterFragment()
         filterFragment.setOnFilterAppliedListener { filters ->
+            val name = filters["name"] ?: ""
             val status = filters["status"] ?: ""
             val gender = filters["gender"] ?: ""
             val species = filters["species"] ?: ""
-            val type = filters["type"] ?: ""
-            val name = filters["name"] ?: ""
 
-            viewModel.fetchFilteredCharacters(status, gender, species)
+
+            viewModel.fetchFilteredCharacters(name, status, gender, species)
         }
         filterFragment.show(parentFragmentManager, "FilterDialog")
     }
@@ -40,11 +40,11 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
         binding = FragmentCharacterBinding.bind(view)
 
         adapter = CharacterAdapter{ characterId ->
-                val bundle = Bundle().apply {
-                    putInt("characterId", characterId)
-                }
-                findNavController().navigate(R.id.characterDetailFragment, bundle)
+            val bundle = Bundle().apply {
+                putInt("characterId", characterId)
             }
+            findNavController().navigate(R.id.characterDetailFragment, bundle)
+        }
 
         binding.btnFilter.setOnClickListener {
             showFilterDialog()

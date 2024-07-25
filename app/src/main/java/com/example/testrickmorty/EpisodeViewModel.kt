@@ -82,38 +82,38 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
         fetchFilteredEpisodes(query, "", 1)
     }
 
-/*    fun searchEpisodes(query: String) {
-        _isLoading.value = true
-        viewModelScope.launch {
-            try {
-                if (query.isBlank()) {
-                    currentSearchQuery = null
-                    searchResults.clear()
-                    currentPage = 1
-                    isLastPage = false
-                    isFiltering = false
-                    pageLoadingStates.clear()
-                    _episodes.value = emptyList()
-                    fetchEpisodes(1)
-                } else {
-                    currentSearchQuery = query
-                    currentPage = 1
-                    isLastPage = false
-                    isFiltering = true
-                    searchResults.clear()
-                    pageLoadingStates.clear()
-                    val response = repository.searchEpisodes(query)
-                    _episodes.value = response.results
-                    searchResults.addAll(response.results)
+    /*    fun searchEpisodes(query: String) {
+            _isLoading.value = true
+            viewModelScope.launch {
+                try {
+                    if (query.isBlank()) {
+                        currentSearchQuery = null
+                        searchResults.clear()
+                        currentPage = 1
+                        isLastPage = false
+                        isFiltering = false
+                        pageLoadingStates.clear()
+                        _episodes.value = emptyList()
+                        fetchEpisodes(1)
+                    } else {
+                        currentSearchQuery = query
+                        currentPage = 1
+                        isLastPage = false
+                        isFiltering = true
+                        searchResults.clear()
+                        pageLoadingStates.clear()
+                        val response = repository.searchEpisodes(query)
+                        _episodes.value = response.results
+                        searchResults.addAll(response.results)
+                    }
+                } catch (e: Exception) {
+                    _errorMessage.value = "Error fetching episodes: ${e.message}"
+                    Log.e("EpisodeViewModel", "Error fetching episodes", e)
+                } finally {
+                    _isLoading.value = false
                 }
-            } catch (e: Exception) {
-                _errorMessage.value = "Error fetching episodes: ${e.message}"
-                Log.e("EpisodeViewModel", "Error fetching episodes", e)
-            } finally {
-                _isLoading.value = false
             }
-        }
-    }*/
+        }*/
 
 
     fun fetchFilteredEpisodes(name: String, episode: String, page: Int = 1) {
