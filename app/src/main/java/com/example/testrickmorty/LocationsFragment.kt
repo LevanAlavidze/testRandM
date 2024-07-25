@@ -22,14 +22,17 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("LocationsFragment", "Fragment View Created")
         binding = FragmentLocationsBinding.bind(view)
 
-        adapter = LocationsAdapter { locationId ->
+        adapter = LocationsAdapter (
+            onItemClick ={ locationId ->
             val bundle = Bundle().apply {
                 putInt("locationId", locationId)
+                }
+                findNavController().navigate(R.id.locationDetailFragment, bundle)
             }
-            findNavController().navigate(R.id.locationDetailFragment, bundle)
-        }
+        )
         binding.locationRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.locationRecyclerView.adapter = adapter
 
@@ -46,22 +49,25 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
         })
 
         viewModel.locations.observe(viewLifecycleOwner) { locations ->
-            Log.d("LocationsFragment", "Observed Locations: $locations")
+            Log.d("LocationsFragment", "Updating Locations List with ${locations.size} items")
             adapter.submitList(locations)
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+
             Log.d("LocationsFragment", "Loading State: $isLoading")
             binding.swipeRefreshLayout.isRefreshing = isLoading
-            if (!isLoading) {
-                binding.swipeRefreshLayout.isEnabled = true
-            }
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            Log.d("LocationsFragment", "Error Message: $message")
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
             Log.d("LocationsFragment", "Swipe Refresh Triggered")
-            viewModel.refreshLocations()
+            viewModel.fetchLocations(1)
         }
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {

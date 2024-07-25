@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="viewModel"
             type="com.example.testrickmorty.CharacterViewModel" />
@@ -20,6 +19,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:queryHint="Search characters" />
+
+        <Button
+            android:id="@+id/btnFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Filter"
+            android:layout_gravity="end"
+            android:layout_margin="8dp"
+            android:layout_marginTop="8dp" />
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefreshLayout"
@@ -39,6 +47,5 @@
                 android:layout_gravity="center"
                 android:visibility="gone" />
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-
     </LinearLayout>
 </layout>

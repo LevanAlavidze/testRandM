@@ -1,6 +1,9 @@
 package com.example.testrickmorty
 
 import android.util.Log
+import retrofit2.HttpException
+import retrofit2.Response
+import java.io.IOException
 
 class Repository(
     private val apiService: ApiService,
@@ -144,6 +147,7 @@ class Repository(
         return cachedLocations
     }
 
+
     suspend fun getCachedEpisodes(): List<Episode> {
         Log.d("Repository", "Fetching cached episodes from database")
         val cachedEpisodes = episodeDao.getAllEpisodes().map { episodeEntity ->
@@ -167,6 +171,7 @@ class Repository(
             throw Exception("Failed to fetch character details")
         }
     }
+
     suspend fun getLocation(locationId: Int): Location {
         val response = apiService.getLocation(locationId)
         if (response.isSuccessful) {
@@ -175,19 +180,23 @@ class Repository(
             throw Exception("Failed to fetch location details")
         }
     }
+
     suspend fun getCharactersByUrls(urls: List<String>): List<Character> {
         val characters = mutableListOf<Character>()
         for (url in urls) {
-            // Fetch each character by its URL
             try {
-                val character = apiService.getCharacterByUrl(url)
-                characters.add(character)
+                val response = apiService.getCharacterByUrl(url)
+                if (response.isSuccessful) {
+                    response.body()?.let { characters.add(it) }
+                }
             } catch (e: Exception) {
-                // Handle exceptions (e.g., log error or continue with the next URL)
+                // Handle exceptions appropriately
+                Log.e("Repository", "Error fetching character from URL $url: ${e.message}")
             }
         }
         return characters
     }
+
     suspend fun getEpisode(episodeId: Int): Episode {
         val response = apiService.getEpisode(episodeId)
         if (response.isSuccessful) {
@@ -196,6 +205,7 @@ class Repository(
             throw Exception("Failed to fetch episode details")
         }
     }
+
     suspend fun getEpisodesByUrls(urls: List<String>): List<Episode> {
         return urls.mapNotNull { url ->
             try {
@@ -207,7 +217,6 @@ class Repository(
         }
     }
 
-
     suspend fun searchEpisodes(query: String): EpisodeResponse {
         return apiService.searchEpisodes(query)
     }
@@ -215,11 +224,32 @@ class Repository(
     suspend fun searchCharacters(query: String): CharacterResponse {
         return apiService.searchCharacters(query)
     }
-    suspend fun filterEpisodes(season: String): EpisodeResponse {
-        return apiService.filterEpisodes(season)
-    }
+
     suspend fun searchLocations(query: String): LocationResponse {
         return apiService.searchLocations(query)
     }
 
+    suspend fun getFilteredCharacters(
+        status: String,
+        gender: String,
+        species: String,
+        type: String,
+        name: String
+    ): List<Character> {
+        Log.d("Repository", "Filtering characters with status: $status, gender: $gender, species: $species, type: $type, name: $name")
+        return try {
+            val response = apiService.getFilteredCharacters(status, gender, species, type, name)
+            Log.d("Repository", "Filtered characters response: ${response.results.size} items")
+            response.results
+        } catch (e: HttpException) {
+            Log.e("Repository", "HTTP error during filtering: ${e.code()} - ${e.message()}")
+            emptyList()
+        } catch (e: IOException) {
+            Log.e("Repository", "IO error during filtering: ${e.message}")
+            emptyList()
+        } catch (e: Exception) {
+            Log.e("Repository", "Unexpected error during filtering: ${e.message}")
+            emptyList()
+        }
+    }
 }

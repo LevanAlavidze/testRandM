@@ -24,6 +24,7 @@ interface ApiService {
 
     @GET("episode")
     suspend fun getEpisodes(@Query("page") page: Int): EpisodeResponse
+
     @GET("character/{id}")
 
     suspend fun getCharacter(@Path("id") id: Int): Response<Character>
@@ -32,7 +33,7 @@ interface ApiService {
     suspend fun getLocation(@Path("id") locationId: Int): Response<Location>
 
     @GET
-    suspend fun getCharacterByUrl(@Url url: String): Character
+    suspend fun getCharacterByUrl(@Url url: String): Response<Character>
 
     @GET("character")
     suspend fun getCharactersByPage(@Query("page") page: Int): List<Character>
@@ -52,6 +53,29 @@ interface ApiService {
     @GET("location")
     suspend fun searchLocations(@Query("name") query: String): LocationResponse
 
+    @GET("character")
+    suspend fun getFilteredCharacters(
+        @Query("status") status: String = "alive", // Default to avoid errors
+        @Query("gender") gender: String = "",
+        @Query("species") species: String = "",
+        @Query("type") type: String = "",
+        @Query("name") name: String = ""
+    ): CharacterResponse
+
+    @GET("location")
+    suspend fun getFilteredLocations(
+        @Query("name") name: String,
+        @Query("type") type: String,
+        @Query("dimension") dimension: String
+    ): LocationResponse
+
+    @GET("episode")
+    suspend fun getFilteredEpisodes(
+        @Query("name") name: String,
+        @Query("episode") episode: String,
+        @Query("series") series: String
+    ): EpisodeResponse
+
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"
 
@@ -60,6 +84,10 @@ interface ApiService {
             val cacheSize = 10 * 1024 * 1024 // 10 MB
             val cache = Cache(cacheDir, cacheSize.toLong())
 
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+
             val okHttpClient = OkHttpClient.Builder()
                 .cache(cache)
                 .addInterceptor { chain ->
@@ -67,14 +95,15 @@ interface ApiService {
                         if (hasNetwork(context)) {
                             header("Cache-Control", "public, max-age=" + 5)
                         } else {
-                            header("Cache-Control", "public, only-if-cached, max-stale=" + 60 * 60 * 24 * 7)
+                            header(
+                                "Cache-Control",
+                                "public, only-if-cached, max-stale=" + 60 * 60 * 24 * 7
+                            )
                         }
                     }.build()
                     chain.proceed(request)
                 }
-                .addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                })
+                .addInterceptor(loggingInterceptor) // Add the logging interceptor here
                 .build()
 
             return Retrofit.Builder()
@@ -86,10 +115,13 @@ interface ApiService {
         }
 
         private fun hasNetwork(context: Context): Boolean {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val network = connectivityManager.activeNetwork
             val capabilities = connectivityManager.getNetworkCapabilities(network)
-            return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+            return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(
+                NetworkCapabilities.TRANSPORT_CELLULAR
+            ))
         }
     }
 }

@@ -20,23 +20,37 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
     private lateinit var binding: FragmentCharacterBinding
     private lateinit var adapter: CharacterAdapter
 
+    private fun showFilterDialog() {
+        val filterFragment = FilterFragment()
+        filterFragment.setOnFilterAppliedListener { filters ->
+            val status = filters["status"] ?: ""
+            val gender = filters["gender"] ?: ""
+            val species = filters["species"] ?: ""
+            val type = filters["type"] ?: ""
+            val name = filters["name"] ?: ""
+
+            viewModel.fetchFilteredCharacters(status, gender, species, type, name)
+        }
+        filterFragment.show(parentFragmentManager, "FilterDialog")
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.d("CharacterFragment", "Fragment view created")
-
         binding = FragmentCharacterBinding.bind(view)
 
-        //modified
         adapter = CharacterAdapter(
             onItemClick = { characterId ->
                 val bundle = Bundle().apply {
                     putInt("characterId", characterId)
                 }
                 findNavController().navigate(R.id.characterDetailFragment, bundle)
-
             }
         )
 
+        binding.btnFilter.setOnClickListener {
+            showFilterDialog()
+        }
 
         binding.characterRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.characterRecyclerView.adapter = adapter
@@ -55,9 +69,6 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
         viewModel.characters.observe(viewLifecycleOwner) { characters ->
             Log.d("CharacterFragment", "Updating characters list with ${characters.size} items")
-            characters.forEach { character ->
-                Log.d("CharacterFragment", "Character: ${character.name}, ${character.gender}, ${character.species}")
-            }
             adapter.submitList(characters)
         }
 
@@ -65,6 +76,7 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             Log.d("CharacterFragment", "Loading state: $isLoading")
             binding.swipeRefreshLayout.isRefreshing = isLoading
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
@@ -77,8 +89,6 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             viewModel.fetchCharacters(1)
         }
 
-        // Initial fetch
-        viewModel.fetchCharacters(1)
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -90,17 +100,15 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrBlank()) {
-                    // Clear the search and show all characters
-                    viewModel.searchCharacters("")
-                    viewModel.fetchCharacters(1)
+                    viewModel.searchCharacters("") // Clear the search query
                 }
                 return true
             }
         })
     }
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         viewModel.characters.value?.let { adapter.submitList(it.toList()) }
-
     }
 }

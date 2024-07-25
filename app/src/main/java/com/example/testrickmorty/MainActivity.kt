@@ -14,8 +14,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var viewModel: CharacterViewModel
+    lateinit var viewModel: CharacterViewModel
     private lateinit var navController: NavController
+
+    var currentSearchQuery: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,27 +45,6 @@ class MainActivity : AppCompatActivity() {
         val bottomNavigationView: BottomNavigationView = binding.bottomNavigation
         bottomNavigationView.setupWithNavController(navController)
 
-        // Handle navigation item selection
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.characterFragment -> {
-                    if (navController.currentDestination?.id != R.id.characterFragment) {
-                        navController.navigate(R.id.characterFragment)
-                    }
-                    true
-                }
-                R.id.locationsFragment -> {
-                    navController.navigate(R.id.locationsFragment)
-                    true
-                }
-                R.id.episodesFragment -> {
-                    navController.navigate(R.id.episodesFragment)
-                    true
-                }
-                else -> false
-            }
-        }
-
         // Handle back press
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -75,6 +56,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
         // Listen for destination changes to control back arrow visibility
         navController.addOnDestinationChangedListener { _, destination, _ ->
             if (destination.id == R.id.characterFragment) {

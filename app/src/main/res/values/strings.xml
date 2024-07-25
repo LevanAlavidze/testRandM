@@ -2,4 +2,21 @@
     <string name="app_name">TestRickMorty</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string-array name="status_array">
+        <item>Alive</item>
+        <item>Dead</item>
+        <item>Unknown</item>
+    </string-array>
+
+    <string-array name="gender_array">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Unknown</item>
+    </string-array>
+
+    <string-array name="species_array">
+        <item>Human</item>
+        <item>Alien</item>
+        <item>Humanoid</item>
+    </string-array>
 </resources>
