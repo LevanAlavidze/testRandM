@@ -21,9 +21,23 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
     private lateinit var binding: FragmentEpisodesBinding
     private lateinit var adapter: EpisodeAdapter
 
+    private fun showFilterDialog() {
+        val filterFragment = EpisodeFilterFragment()
+        filterFragment.setOnFilterAppliedListener { filters ->
+            val name = filters["name"] ?: ""
+            val episode = filters["episode"] ?: ""
+
+            viewModel.fetchFilteredEpisodes(name, episode)
+            Log.d("EpisodesFragment", "Fetching filtered episodes with name: $name and episode: $episode")
+
+        }
+        filterFragment.show(parentFragmentManager, "FilterDialog")
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding = FragmentEpisodesBinding.bind(view)
+
 
         adapter = EpisodeAdapter(
             onItemClick = { episodeId -> // Handle item click
@@ -33,6 +47,9 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
                 findNavController().navigate(R.id.episodeDetailFragment, bundle)
             }
         )
+        binding.btnFilter.setOnClickListener {
+            showFilterDialog()
+        }
         binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.episodeRecyclerView.adapter = adapter
 
@@ -56,6 +73,7 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
             adapter.submitList(episodes)
         }
 
+
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.swipeRefreshLayout.isRefreshing = isLoading
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
@@ -63,6 +81,14 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+
+        viewModel.noResults.observe(viewLifecycleOwner) { noResults ->
+            if (noResults) {
+                // Show a message or UI indicating no results
+                Toast.makeText(requireContext(), "No episodes found", Toast.LENGTH_SHORT).show()
+
+            }
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {

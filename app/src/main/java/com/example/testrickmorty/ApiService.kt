@@ -71,10 +71,10 @@ interface ApiService {
 
     @GET("episode")
     suspend fun getFilteredEpisodes(
-        @Query("name") name: String,
-        @Query("episode") episode: String,
-        @Query("series") series: String
+        @Query("name") name: String?,
+        @Query("episode") episode: String?
     ): EpisodeResponse
+
 
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"

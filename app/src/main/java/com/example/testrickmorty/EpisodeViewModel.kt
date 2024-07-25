@@ -21,6 +21,9 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
+    private val _noResults = MutableLiveData<Boolean>()
+    val noResults: LiveData<Boolean> get() = _noResults
+
     private var currentPage = 1
     private var isLastPage = false
     private var currentSearchQuery: String? = null
@@ -73,6 +76,7 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
+
     fun searchEpisodes(query: String) {
         _isLoading.value = true
         viewModelScope.launch {
@@ -99,6 +103,29 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching episodes: ${e.message}"
                 Log.e("EpisodeViewModel", "Error fetching episodes", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchFilteredEpisodes(name: String, episode: String) {
+        _isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val filteredEpisodes = repository.getFilteredEpisodes(name, episode)
+                if (filteredEpisodes.isEmpty()) {
+                    _noResults.value = true
+                    _episodes.value = emptyList()
+                } else {
+                    _episodes.value = filteredEpisodes
+                    _noResults.value = false
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error fetching filtered episodes: ${e.message}"
+                Log.e("EpisodeViewModel", "Error fetching filtered episodes", e)
+                _episodes.value = emptyList()
+                _noResults.value = true
             } finally {
                 _isLoading.value = false
             }

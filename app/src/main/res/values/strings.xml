@@ -19,4 +19,8 @@
         <item>Alien</item>
         <item>Humanoid</item>
     </string-array>
+
+    <string name="episode_hint_number">Enter episode number</string>
+    <string name="name_hint">Enter episode name</string>
+    <string name="apply_filters">Apply Filters</string>
 </resources>

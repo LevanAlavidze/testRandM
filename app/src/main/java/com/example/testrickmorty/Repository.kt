@@ -252,4 +252,29 @@ class Repository(
             emptyList()
         }
     }
+
+    suspend fun getFilteredEpisodes(name: String, episode: String): List<Episode> {
+        val nameQuery = if (name.isNotEmpty()) name else null
+        val episodeQuery = if (episode.isNotEmpty()) episode else null
+        return try {
+            val response = apiService.getFilteredEpisodes(nameQuery, episodeQuery)
+            if (response.results.isEmpty()) {
+                Log.d("Repository", "No episodes found")
+                // Handle the empty results scenario if needed
+            } else {
+                Log.d("Repository", "Fetched ${response.results.size} episodes")
+            }
+            response.results
+        } catch (e: HttpException) {
+            Log.e("Repository", "HTTP error during filtering: ${e.code()} - ${e.message()}")
+            emptyList()
+        } catch (e: IOException) {
+            Log.e("Repository", "IO error during filtering: ${e.message}")
+            emptyList()
+        } catch (e: Exception) {
+            Log.e("Repository", "Unexpected error during filtering: ${e.message}")
+            emptyList()
+        }
+    }
+
 }
