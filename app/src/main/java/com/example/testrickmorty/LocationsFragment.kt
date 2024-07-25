@@ -69,6 +69,7 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
             Log.d("LocationsFragment", "Swipe Refresh Triggered")
             viewModel.fetchLocations(1)
         }
+        viewModel.fetchLocations(1)
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
@@ -81,6 +82,7 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrBlank()) {
                     viewModel.searchLocations("")
+                    viewModel.fetchLocations(1)
                 }
                 return true
             }

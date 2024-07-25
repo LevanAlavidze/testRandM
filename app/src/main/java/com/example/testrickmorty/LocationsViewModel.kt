@@ -123,6 +123,7 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
                     currentPage = 1
                     isLastPage = false
                     pageLoadingStates.clear()
+                    _locations.value = emptyList()
                     fetchLocations(1) // Fetch all locations
                 } else {
                     // Perform search and update the list with search results

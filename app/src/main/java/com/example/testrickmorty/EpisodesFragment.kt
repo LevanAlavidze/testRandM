@@ -36,7 +36,6 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.episodeRecyclerView.adapter = adapter
 
-        // Add the scroll listener here
         binding.episodeRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)

@@ -20,7 +20,6 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
     val errorMessage: LiveData<String> get() = _errorMessage
 
     private var currentPage = 1
-/*    private var isRefreshing = false*/
     private var isLastPage = false
     private var currentSearchQuery: String? = null
     private val searchResults = mutableListOf<Character>()
@@ -104,6 +103,7 @@ class CharacterViewModel(private val repository: Repository) : ViewModel() {
                     currentPage = 1
                     isLastPage = false
                     pageLoadingStates.clear()
+                    _characters.value = emptyList()
                     fetchCharacters(1) // Fetch first page of all episodes
                 } else {
                     currentSearchQuery = query

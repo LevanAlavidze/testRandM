@@ -69,6 +69,9 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
         viewModel.characters.observe(viewLifecycleOwner) { characters ->
             Log.d("CharacterFragment", "Updating characters list with ${characters.size} items")
+            characters.forEach { character ->
+                Log.d("CharacterFragment", "Character: ${character.name}, ${character.species}")
+            }
             adapter.submitList(characters)
         }
 
@@ -88,6 +91,7 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             Log.d("CharacterFragment", "Refreshing characters")
             viewModel.fetchCharacters(1)
         }
+        viewModel.fetchCharacters(1)
 
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -101,6 +105,7 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrBlank()) {
                     viewModel.searchCharacters("") // Clear the search query
+                    viewModel.fetchCharacters(1)
                 }
                 return true
             }

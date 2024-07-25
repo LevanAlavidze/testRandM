@@ -84,6 +84,7 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
                     currentPage = 1
                     isLastPage = false
                     pageLoadingStates.clear()
+                    _episodes.value = emptyList()
                     fetchEpisodes(1) // Fetch first page of all episodes
                 } else {
                     currentSearchQuery = query
