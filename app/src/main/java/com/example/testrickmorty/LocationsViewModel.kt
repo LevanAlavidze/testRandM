@@ -21,31 +21,18 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
+    private val _noResults = MutableLiveData<Boolean>()
+    val noResults: LiveData<Boolean> get() = _noResults
+
     private var currentPage = 1
-  /*  private var isRefreshing = false*/
     private var isLastPage = false
     private var currentSearchQuery: String? = null
-    private val searchResults = mutableListOf<Location>()
     private val pageLoadingStates = mutableMapOf<Int, Boolean>()
+    private var isFiltering = false
+    private var filterName: String = ""
+    private var filterType: String = ""
+    private var filterDimension: String = ""
 
-/*    init {
-        loadInitialData()
-    }
-
-    private fun loadInitialData() {
-        viewModelScope.launch {
-            try {
-                val cachedLocations = repository.getCachedLocations()
-                _locations.value = cachedLocations
-                Log.d("LocationsViewModel", "Initial cached locations: ${cachedLocations.size} items")
-
-                fetchLocations(currentPage)
-            } catch (e: Exception) {
-                _errorMessage.value = "Error loading initial data: ${e.message}"
-                Log.e("LocationsViewModel", "Error loading initial data: ${e.message}")
-            }
-        }
-    }*/
 
     fun fetchLocations(page: Int) {
         if (_isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
@@ -56,15 +43,13 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val fetchedLocations = if (currentSearchQuery != null) {
-                    val response = repository.searchLocations(currentSearchQuery!!)
-                    response.results
-                } else {
-                    repository.getLocations(page)
-                }
+                val fetchedLocations = repository.getLocations(page)
 
-                val currentLocations = _locations.value.orEmpty().toMutableList()
-                currentLocations.addAll(fetchedLocations)
+                val currentLocations = if (page == 1) {
+                    fetchedLocations
+                }else{
+                    _locations.value.orEmpty().toMutableList().apply {addAll(fetchedLocations)}
+                }
                 _locations.value = currentLocations.distinctBy { it.id }
 
                 currentPage = page
@@ -87,60 +72,88 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
     }
 
     fun fetchNextPage() {
-        if (!isLastPage && pageLoadingStates[currentPage + 1] != true) {
+        if (isFiltering) {
+            fetchFilteredLocationsNextPage(currentPage + 1)
+        } else {
             fetchLocations(currentPage + 1)
         }
     }
 
-    /*fun refreshLocations() {
-        isRefreshing = true
-        currentPage = 1
+    fun searchLocations(query: String) {
+        currentSearchQuery = query
+        isFiltering = query.isNotBlank()
+        fetchFilteredLocations(query,"","",1)
+    }
+
+    fun fetchFilteredLocations(name: String, type: String, dimension: String, page: Int = 1) {
+        _isLoading.value = true
+        isFiltering = true
+        currentPage = page
         isLastPage = false
+        filterName = name
+        filterType = type
+        filterDimension = dimension
+        pageLoadingStates.clear()
+
         viewModelScope.launch {
-            _isLoading.value = true
             try {
-                val newLocations = repository.getLocations(currentPage)
-                _locations.value = newLocations
-                currentPage++
-            } catch (e: Exception) {
-                Log.e("LocationsViewModel", "Error refreshing locations", e)
-                _errorMessage.value = "Error refreshing locations: ${e.message}"
-            } finally {
-                isRefreshing = false
+                val filteredLocations = repository.getFilteredLocations(
+                    name, type, dimension, page)
+                if (filteredLocations.isEmpty()) {
+                    _noResults.value = true
+                    _locations.value = emptyList()
+                } else {
+                    val currentLocations = if (page == 1) {
+                        filteredLocations
+                    } else {
+                        _locations.value.orEmpty().toMutableList()
+                            .apply { addAll(filteredLocations) }
+                    }
+                    _locations.value = currentLocations.distinctBy { it.id }
+                    _noResults.value = false
+                }
+            }catch (e: Exception) {
+                _errorMessage.value = "Error fetching locations: ${e.message}"
+                Log.e("LocationsViewModel", "Error fetching locations", e)
+                _locations.value = emptyList()
+                _noResults.value = true
+            }finally {
                 _isLoading.value = false
             }
         }
-    }*/
+    }
 
-    fun searchLocations(query: String) {
+    fun fetchFilteredLocationsNextPage(page: Int) {
+        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
+            return
+        }
+        pageLoadingStates[page] = true
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                if (query.isBlank()) {
-                    // Reset search and fetch all locations
-                    currentSearchQuery = null
-                    searchResults.clear()
-                    currentPage = 1
-                    isLastPage = false
-                    pageLoadingStates.clear()
-                    _locations.value = emptyList()
-                    fetchLocations(1) // Fetch all locations
+                val response =
+                    repository.getFilteredLocations(filterName, filterType, filterDimension, page)
+                val fetchedLocations = response
+
+                val currentLocations = _locations.value.orEmpty().toMutableList()
+                currentLocations.addAll(fetchedLocations)
+                _locations.value = currentLocations.distinctBy { it.id }
+
+                currentPage = page
+                isLastPage = fetchedLocations.isEmpty()
+            } catch (e: HttpException) {
+                if (e.code() == 404) {
+                    isLastPage = true
                 } else {
-                    // Perform search and update the list with search results
-                    currentSearchQuery = query
-                    currentPage = 1
-                    isLastPage = false
-                    searchResults.clear()
-                    pageLoadingStates.clear()
-                    val response = repository.searchLocations(query)
-                    _locations.value = searchResults // Set the search results
-                    searchResults.addAll(response.results)
+                    _errorMessage.value = "Error fetching locations: ${e.message()}"
+                    Log.e("LocationsViewModel", "Error fetching locations", e)
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Error searching locations: ${e.message}"
-                Log.e("LocationsViewModel", "Error searching locations", e)
+                _errorMessage.value = "Error fetching locations: ${e.message}"
+                Log.e("LocationsViewModel", "Error fetching locations", e)
             } finally {
                 _isLoading.value = false
+                pageLoadingStates[page] = false
             }
         }
     }

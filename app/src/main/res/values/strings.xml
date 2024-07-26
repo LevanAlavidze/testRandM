@@ -23,4 +23,8 @@
     <string name="episode_hint_number">episode num</string>
     <string name="name_hint">episode name</string>
     <string name="apply_filters">Apply Filters</string>
+
+    <string name="location_name">name</string>
+    <string name="location_type">type</string>
+    <string name="location_dimension">dimension</string>
 </resources>

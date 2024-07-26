@@ -1,6 +1,7 @@
 package com.example.testrickmorty
 
 import android.util.Log
+import androidx.annotation.Dimension
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
@@ -237,6 +238,11 @@ class Repository(
     suspend fun getFilteredEpisodes(name: String, episode: String, page: Int): List<Episode> {
         // Assuming apiService has a method that supports filtering by name and episode with pagination
         val response = apiService.getFilteredEpisodes(name, episode, page)
+        return response.results
+    }
+    suspend fun getFilteredLocations(name: String, type: String, dimension: String, page: Int): List<Location> {
+        // Assuming apiService has a method that supports filtering by name and episode with pagination
+        val response = apiService.getFilteredLocations(name, type,dimension, page)
         return response.results
     }
 }

@@ -20,19 +20,34 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
     private lateinit var binding: FragmentLocationsBinding
     private lateinit var adapter: LocationsAdapter
 
+
+    private fun showFilterDialog() {
+        val filterFragment = FilterFragment()
+        filterFragment.setOnFilterAppliedListener { filters ->
+            val name = filters["name"] ?: ""
+            val type = filters["type"] ?: ""
+            val dimension = filters["dimension"] ?: ""
+            viewModel.fetchFilteredLocations(name, type, dimension)
+        }
+        filterFragment.show(parentFragmentManager, "FilterDialog")
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         Log.d("LocationsFragment", "Fragment View Created")
         binding = FragmentLocationsBinding.bind(view)
 
-        adapter = LocationsAdapter (
-            onItemClick ={ locationId ->
+        adapter = LocationsAdapter {locationId ->
             val bundle = Bundle().apply {
                 putInt("locationId", locationId)
                 }
                 findNavController().navigate(R.id.locationDetailFragment, bundle)
             }
-        )
+        binding.btnFilter.setOnClickListener {
+            showFilterDialog()
+        }
+
+
         binding.locationRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.locationRecyclerView.adapter = adapter
 

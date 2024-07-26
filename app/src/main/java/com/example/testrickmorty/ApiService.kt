@@ -66,7 +66,8 @@ interface ApiService {
     suspend fun getFilteredLocations(
         @Query("name") name: String,
         @Query("type") type: String,
-        @Query("dimension") dimension: String
+        @Query("dimension") dimension: String,
+        @Query("page") page: Int
     ): LocationResponse
 
     @GET("episode")

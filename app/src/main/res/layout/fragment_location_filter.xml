@@ -1,0 +1,33 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/location_name"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/etType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/location_type"
+        android:inputType="text" />
+    <EditText
+        android:id="@+id/etDimension"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/location_dimension"
+        android:inputType="text" />
+
+
+    <Button
+        android:id="@+id/btnApplyFilter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/apply_filters" />
+</LinearLayout>
