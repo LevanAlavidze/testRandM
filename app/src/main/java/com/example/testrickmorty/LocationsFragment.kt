@@ -22,7 +22,7 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
 
 
     private fun showFilterDialog() {
-        val filterFragment = FilterFragment()
+        val filterFragment = LocationFilterFragment()
         filterFragment.setOnFilterAppliedListener { filters ->
             val name = filters["name"] ?: ""
             val type = filters["type"] ?: ""
@@ -79,7 +79,12 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
             Log.d("LocationsFragment", "Error Message: $message")
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
-
+        viewModel.noResults.observe(viewLifecycleOwner) { noResults ->
+            if (noResults) {
+                // Show a message or UI indicating no results
+                Toast.makeText(requireContext(), "No Location found", Toast.LENGTH_SHORT).show()
+            }
+        }
         binding.swipeRefreshLayout.setOnRefreshListener {
             Log.d("LocationsFragment", "Swipe Refresh Triggered")
             viewModel.fetchLocations(1)
