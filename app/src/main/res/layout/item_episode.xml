@@ -4,7 +4,7 @@
     <data>
         <variable
             name="episode"
-            type="com.example.testrickmorty.Episode" />
+            type="com.example.testrickmorty.feature.episodes.models.Episode" />
     </data>
 
     <LinearLayout

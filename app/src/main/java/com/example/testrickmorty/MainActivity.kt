@@ -10,6 +10,8 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.testrickmorty.databinding.ActivityMainBinding
+import com.example.testrickmorty.feature.characters.di.CharacterViewModelFactory
+import com.example.testrickmorty.feature.characters.vm.CharacterViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {

@@ -3,7 +3,7 @@
     <data>
         <variable
             name="location"
-            type="com.example.testrickmorty.Location" />
+            type="com.example.testrickmorty.feature.locations.models.Location" />
     </data>
 
     <LinearLayout

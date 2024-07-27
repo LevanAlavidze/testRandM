@@ -5,7 +5,7 @@
     <data>
         <variable
             name="viewModel"
-            type="com.example.testrickmorty.CharacterViewModel" />
+            type="com.example.testrickmorty.feature.characters.vm.CharacterViewModel" />
     </data>
 
     <LinearLayout

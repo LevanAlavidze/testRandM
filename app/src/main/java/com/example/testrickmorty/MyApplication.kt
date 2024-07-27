@@ -2,6 +2,9 @@ package com.example.testrickmorty
 
 import android.app.Application
 import androidx.room.Room
+import com.example.testrickmorty.data.ApiService
+import com.example.testrickmorty.data.AppDatabase
+import com.example.testrickmorty.data.Repository
 
 class MyApplication : Application() {
     lateinit var repository: Repository
