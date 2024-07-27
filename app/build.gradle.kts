@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+
 }
 
 android {
@@ -56,6 +57,10 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
     implementation ("com.google.android.material:material:1.9.0")
     implementation (libs.androidx.fragment)
+
+    //DI
+    implementation("com.google.dagger:hilt-android:2.45")
+    kapt("com.google.dagger:hilt-android-compiler:2.45")
 
 
     // Room

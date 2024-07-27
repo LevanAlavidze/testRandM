@@ -5,7 +5,9 @@ import androidx.room.Room
 import com.example.testrickmorty.data.ApiService
 import com.example.testrickmorty.data.AppDatabase
 import com.example.testrickmorty.data.Repository
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class MyApplication : Application() {
     lateinit var repository: Repository
     private lateinit var database: AppDatabase

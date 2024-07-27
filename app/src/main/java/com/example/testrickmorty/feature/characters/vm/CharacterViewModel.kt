@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.feature.characters.models.Character
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import javax.inject.Inject
 
-class CharacterViewModel(private val repository: Repository) : ViewModel() {
+@HiltViewModel
+class CharacterViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
     private val _characters = MutableLiveData<List<Character>>()
     val characters: LiveData<List<Character>> get() = _characters

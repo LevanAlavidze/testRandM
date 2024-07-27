@@ -17,7 +17,9 @@ import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
 import com.example.testrickmorty.databinding.FragmentCharacterBinding
 import com.example.testrickmorty.feature.characters.adapter.CharacterAdapter
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class CharacterFragment : Fragment(R.layout.fragment_character) {
     private val viewModel: CharacterViewModel by viewModels {
         CharacterViewModelFactory((requireActivity().application as MyApplication).repository)
