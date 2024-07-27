@@ -12,8 +12,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.feature.characters.vm.CharacterViewModel
-import com.example.testrickmorty.feature.characters.di.CharacterViewModelFactory
-import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
 import com.example.testrickmorty.databinding.FragmentCharacterBinding
 import com.example.testrickmorty.feature.characters.adapter.CharacterAdapter
@@ -21,9 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class CharacterFragment : Fragment(R.layout.fragment_character) {
-    private val viewModel: CharacterViewModel by viewModels {
-        CharacterViewModelFactory((requireActivity().application as MyApplication).repository)
-    }
+    private val viewModel: CharacterViewModel by viewModels()
     private lateinit var binding: FragmentCharacterBinding
     private lateinit var adapter: CharacterAdapter
 
@@ -101,19 +97,17 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) {
-                    viewModel.searchCharacters(query)
+                query?.let {
+                    viewModel.searchCharacters(it)
                 }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrEmpty()) {
-                    if (newText != null) {
-                        viewModel.searchCharacters(newText)
-                    }
                     viewModel.fetchCharacters(1)
-
+                } else {
+                    viewModel.searchCharacters(newText)
                 }
                 return true
             }

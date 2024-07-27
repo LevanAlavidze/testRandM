@@ -13,7 +13,9 @@ import com.example.testrickmorty.databinding.ActivityMainBinding
 import com.example.testrickmorty.feature.characters.di.CharacterViewModelFactory
 import com.example.testrickmorty.feature.characters.vm.CharacterViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var viewModel: CharacterViewModel

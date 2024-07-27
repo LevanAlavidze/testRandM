@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 
 }
 
@@ -46,45 +47,47 @@ android {
 
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("com.google.android.material:material:1.5.0")
-    implementation("androidx.activity:activity-ktx:1.4.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.2")
+    implementation(libs.androidx.core.ktx.v190)
+    implementation(libs.androidx.appcompat.v130)
+    implementation(libs.material.v150)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.constraintlayout.v212)
     implementation(libs.androidx.activity)
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit)
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
-    implementation ("com.google.android.material:material:1.9.0")
+    androidTestImplementation(libs.androidx.espresso.core.v340)
+    implementation (libs.material.v190)
     implementation (libs.androidx.fragment)
 
     //DI
-    implementation("com.google.dagger:hilt-android:2.45")
-    kapt("com.google.dagger:hilt-android-compiler:2.45")
+    implementation("com.google.dagger:hilt-android:2.48")
+    kapt("com.google.dagger:hilt-android-compiler:2.48")
 
 
     // Room
-    implementation("androidx.room:room-runtime:2.6.1")
-    annotationProcessor("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
+    implementation(libs.androidx.room.runtime)
     kapt("androidx.room:room-compiler:2.6.1")
+    implementation(libs.androidx.room.ktx)
 
     //navigation
-    implementation ("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation ("androidx.navigation:navigation-ui-ktx:2.7.7")
+    implementation (libs.androidx.navigation.fragment.ktx)
+    implementation (libs.androidx.navigation.ui.ktx)
     //ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     //LiveData
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.3")
+    implementation(libs.androidx.lifecycle.livedata.ktx)
     //Retrofit
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
     //okhttp
-    implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    //swoipe to refresh
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation(libs.logging.interceptor)
+    implementation(libs.androidx.recyclerview)
+    //swipe to refresh
+    implementation(libs.androidx.swiperefreshlayout)
     //glide
-    implementation("com.github.bumptech.glide:glide:4.14.2")
-    kapt("com.github.bumptech.glide:compiler:4.14.2")
+    implementation(libs.glide)
+    kapt(libs.compiler)
+}
+kapt {
+    correctErrorTypes = true
 }

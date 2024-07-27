@@ -4,16 +4,13 @@ import android.util.Log
 import com.example.testrickmorty.feature.characters.data.CharacterDao
 import com.example.testrickmorty.feature.characters.data.model.CharacterEntity
 import com.example.testrickmorty.feature.characters.models.Character
-import com.example.testrickmorty.feature.characters.models.CharacterResponse
 import com.example.testrickmorty.feature.characters.models.Origin
 import com.example.testrickmorty.feature.episodes.data.EpisodeDao
 import com.example.testrickmorty.feature.episodes.data.models.EpisodeEntity
 import com.example.testrickmorty.feature.episodes.models.Episode
-import com.example.testrickmorty.feature.episodes.models.EpisodeResponse
 import com.example.testrickmorty.feature.locations.data.LocationDao
 import com.example.testrickmorty.feature.locations.data.models.LocationEntity
 import com.example.testrickmorty.feature.locations.models.Location
-import com.example.testrickmorty.feature.locations.models.LocationResponse
 
 class Repository(
     private val apiService: ApiService,
