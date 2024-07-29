@@ -8,13 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.testrickmorty.feature.locations.models.Location
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.feature.characters.models.Character
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LocationDetailsViewModel(
-    private val repository: Repository,
-    private val locationId: Int
+@HiltViewModel
+class LocationDetailsViewModel @Inject constructor(
+    private val repository: Repository
 ) : ViewModel() {
-
     private val _location = MutableLiveData<Location>()
     val location: LiveData<Location> get() = _location
 
@@ -24,58 +25,27 @@ class LocationDetailsViewModel(
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
-    private var currentPage = 1
-    private var isLastPage = false
+    private var locationId: Int? = null
 
-    init {
-        fetchLocation()
+    fun setLocationId(id: Int) {
+        locationId = id
+        loadLocationDetails()
     }
 
-    fun fetchLocation() {
-        viewModelScope.launch {
-            try {
-                _location.value = repository.getLocation(locationId)
-                // Start fetching residents
-                fetchResidentCharacters(_location.value?.residents ?: emptyList())
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
-            }
-        }
-    }
+    private fun loadLocationDetails() {
+        locationId?.let { id ->
+            viewModelScope.launch {
+                try {
+                    val location = repository.getLocation(id)
+                    _location.value = location
 
-    fun fetchResidentCharacters(residents: List<String>) {
-        if (isLastPage) return
-
-        viewModelScope.launch {
-            try {
-                val characters = repository.getCharactersByUrls(residents)
-                if (characters.isEmpty()) {
-                    isLastPage = true
-                } else {
-                    currentPage++
-                    val updatedList = _residentCharacters.value?.toMutableList() ?: mutableListOf()
-                    updatedList.addAll(characters)
-                    _residentCharacters.postValue(updatedList)
+                    val characterUrls = location.residents
+                    val characters = repository.getCharactersByUrls(characterUrls)
+                    _residentCharacters.value = characters
+                } catch (e: Exception) {
+                    _errorMessage.value = e.message
                 }
-            } catch (e: Exception) {
-                _errorMessage.postValue("Failed to load residents.")
             }
-        }
-    }
-
-    fun loadMoreCharacters() {
-        if (!isLastPage) {
-            fetchResidentCharacters(_location.value?.residents ?: emptyList())
-        }
-    }
-}
-
-class LocationDetailsViewModelFactory(private val repository: Repository, private val locationId: Int) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(LocationDetailsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return LocationDetailsViewModel(repository, locationId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+            }
     }
 }

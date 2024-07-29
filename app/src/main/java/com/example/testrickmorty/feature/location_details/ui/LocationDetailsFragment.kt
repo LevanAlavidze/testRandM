@@ -1,7 +1,6 @@
 package com.example.testrickmorty.feature.location_details.ui
 
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Toast
@@ -9,65 +8,66 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.testrickmorty.feature.location_details.vm.LocationDetailsViewModel
-import com.example.testrickmorty.feature.location_details.vm.LocationDetailsViewModelFactory
-import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
+import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.databinding.FragmentLocationDetailsBinding
 import com.example.testrickmorty.feature.characters.adapter.CharacterAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class LocationDetailsFragment : Fragment(R.layout.fragment_location_details) {
-    private var _binding: FragmentLocationDetailsBinding? = null
-    private val binding get() = _binding!!
+    private lateinit var binding: FragmentLocationDetailsBinding
 
-    private val viewModel: LocationDetailsViewModel by viewModels {
-        LocationDetailsViewModelFactory(
-            (requireActivity().application as MyApplication).repository,
-            requireArguments().getInt("locationId")
-        )
-    }
+    @Inject
+    lateinit var repository: Repository
 
-    private lateinit var characterAdapter: CharacterAdapter
+    private val viewModel: LocationDetailsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentLocationDetailsBinding.bind(view)
 
-        characterAdapter = CharacterAdapter(
-            onItemClick = { characterId ->
-                val bundle = Bundle().apply {
-                    putInt("characterId", characterId)
-                }
-                findNavController().navigate(R.id.characterDetailFragment, bundle)
+        binding = FragmentLocationDetailsBinding.bind(view)
 
+        val characterAdapter = CharacterAdapter { locationId ->
+            val bundle = Bundle().apply {
+                putInt("locationId", locationId)
             }
-        )
+            findNavController().navigate(R.id.locationDetailFragment, bundle)
+        }
 
         binding.characterRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.characterRecyclerView.adapter = characterAdapter
 
+        // Retrieve locationId from arguments
+        val locationId = requireArguments().getInt("locationId")
+        viewModel.setLocationId(locationId)
+
         viewModel.location.observe(viewLifecycleOwner) { location ->
             location?.let {
-                binding.location = it // Bind location to the layout
-                Log.d("LocationDetailsFragment", "Location: $it")
-                viewModel.fetchResidentCharacters(it.residents) // Fetch resident characters
+                binding.locationName.text = it.name
+                binding.locationType.text = it.type
+                binding.locationDimension.text = it.dimension
             }
         }
 
         viewModel.residentCharacters.observe(viewLifecycleOwner) { residents ->
-            Log.d("LocationDetailsFragment", "Residents fetched: ${residents.size}")
-            characterAdapter.submitList(residents)
-
-        }
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            residents?.let {
+                characterAdapter.submitList(it)
             }
         }
-    }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+        binding.locationName.setOnClickListener {
+            val locationId = viewModel.location.value?.id ?: return@setOnClickListener
+            val bundle = Bundle().apply {
+                putInt("locationId", locationId)
+            }
+            findNavController().navigate(R.id.locationDetailFragment, bundle)
+        }
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            message?.let {
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }
