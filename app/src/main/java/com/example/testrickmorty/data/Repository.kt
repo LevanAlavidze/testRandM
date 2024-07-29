@@ -11,8 +11,9 @@ import com.example.testrickmorty.feature.episodes.models.Episode
 import com.example.testrickmorty.feature.locations.data.LocationDao
 import com.example.testrickmorty.feature.locations.data.models.LocationEntity
 import com.example.testrickmorty.feature.locations.models.Location
+import javax.inject.Inject
 
-class Repository(
+class Repository @Inject constructor(
     private val apiService: ApiService,
     private val characterDao: CharacterDao,
     private val locationDao: LocationDao,

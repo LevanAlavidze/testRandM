@@ -8,63 +8,66 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
+import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.databinding.FragmentEpisodeDetailsBinding
 import com.example.testrickmorty.feature.characters.adapter.CharacterAdapter
 import com.example.testrickmorty.feature.episode_details.vm.EpisodeDetailsViewModel
-import com.example.testrickmorty.feature.episode_details.vm.EpisodeDetailsViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class EpisodeDetailsFragment : Fragment(R.layout.fragment_episode_details) {
+    private lateinit var binding: FragmentEpisodeDetailsBinding
 
-    private var _binding: FragmentEpisodeDetailsBinding? = null
-    private val binding get() = _binding!!
+    @Inject
+    lateinit var repository: Repository
 
-    private val viewModel: EpisodeDetailsViewModel by viewModels {
-        EpisodeDetailsViewModelFactory(
-            (requireActivity().application as MyApplication).repository,
-            requireArguments().getInt("episodeId")
-        )
-    }
+    private val viewModel: EpisodeDetailsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        _binding = FragmentEpisodeDetailsBinding.bind(view)
 
-        val characterAdapter = CharacterAdapter(
-            onItemClick = { characterId ->
-                val bundle = Bundle().apply {
-                    putInt("characterId", characterId)
-                }
-                findNavController().navigate(R.id.characterDetailFragment, bundle)
+        binding = FragmentEpisodeDetailsBinding.bind(view)
+
+        val characterAdapter = CharacterAdapter { characterId ->
+            val bundle = Bundle().apply {
+                putInt("characterId", characterId)
             }
-        )
+            findNavController().navigate(R.id.characterDetailFragment, bundle)
+        }
 
         binding.characterRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.characterRecyclerView.adapter = characterAdapter
 
+        // Retrieve episodeId from arguments
+        val episodeId = requireArguments().getInt("episodeId")
+        viewModel.setEpisodeId(episodeId)
+
         viewModel.episode.observe(viewLifecycleOwner) { episode ->
             episode?.let {
-                binding.episode = it // Bind episode to the layout
-                Log.d("EpisodeDetailsFragment", "Episode: $it")
-                viewModel.fetchEpisodeCharacters(it.characters) // Fetch characters in the episode
+                binding.episodeName.text = it.name
+                binding.episodeAirDate.text = it.airDate
+
             }
         }
 
         viewModel.episodeCharacters.observe(viewLifecycleOwner) { characters ->
-            Log.d("EpisodeDetailsFragment", "Characters fetched: ${characters.size}")
-            characterAdapter.submitList(characters)
-        }
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            characters?.let {
+                characterAdapter.submitList(it)
             }
         }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+        binding.episodeName.setOnClickListener {
+            val episodeId = viewModel.episode.value?.id ?: return@setOnClickListener
+            val bundle = Bundle().apply {
+                putInt("episodeId", episodeId)
+            }
+            findNavController().navigate(R.id.episodeDetailFragment, bundle)
+        }
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            message?.let {
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 }

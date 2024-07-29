@@ -8,13 +8,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.testrickmorty.feature.episodes.models.Episode
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.feature.characters.models.Character
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class EpisodeDetailsViewModel(
-    private val repository: Repository,
-    private val episodeId: Int
+@HiltViewModel
+class EpisodeDetailsViewModel @Inject constructor(
+    private val repository: Repository
 ) : ViewModel() {
-
     private val _episode = MutableLiveData<Episode>()
     val episode: LiveData<Episode> get() = _episode
 
@@ -24,42 +25,27 @@ class EpisodeDetailsViewModel(
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> get() = _errorMessage
 
-    init {
-        fetchEpisode()
-    }
+    private var episodeId: Int? = null
 
-    private fun fetchEpisode() {
-        viewModelScope.launch {
-            try {
-                _episode.value = repository.getEpisode(episodeId)
-                fetchEpisodeCharacters(_episode.value?.characters ?: emptyList())
-            } catch (e: Exception) {
-                _errorMessage.value = e.message
+   fun setEpisodeId(id: Int) {
+        episodeId = id
+        loadEpisodeDetails()
+   }
+
+    private fun loadEpisodeDetails() {
+        episodeId?.let { id ->
+            viewModelScope.launch {
+                try {
+                    val episode = repository.getEpisode(id)
+                    _episode.value = episode
+
+                    val characterUrls = episode.characters
+                    val characters = repository.getCharactersByUrls(characterUrls)
+                    _episodeCharacters.value = characters
+                } catch (e: Exception) {
+                    _errorMessage.value = e.message
+                }
             }
         }
-    }
-
-    fun fetchEpisodeCharacters(characterUrls: List<String>) {
-        viewModelScope.launch {
-            try {
-                val characters = repository.getCharactersByUrls(characterUrls)
-                _episodeCharacters.value = characters
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to load episode characters."
-            }
-        }
-    }
-}
-
-class EpisodeDetailsViewModelFactory(
-    private val repository: Repository,
-    private val episodeId: Int
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(EpisodeDetailsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return EpisodeDetailsViewModel(repository, episodeId) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

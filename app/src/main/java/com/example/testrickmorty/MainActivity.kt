@@ -1,16 +1,14 @@
 package com.example.testrickmorty
-
 import android.os.Bundle
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.testrickmorty.databinding.ActivityMainBinding
-import com.example.testrickmorty.feature.characters.di.CharacterViewModelFactory
 import com.example.testrickmorty.feature.characters.vm.CharacterViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,7 +16,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    lateinit var viewModel: CharacterViewModel
+    private val viewModel: CharacterViewModel by viewModels()
     private lateinit var navController: NavController
 
     var currentSearchQuery: String? = null
@@ -27,11 +25,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Set up ViewModel
-        val repository = (application as MyApplication).repository
-        val viewModelFactory = CharacterViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory)[CharacterViewModel::class.java]
 
         setSupportActionBar(binding.toolbar)
 

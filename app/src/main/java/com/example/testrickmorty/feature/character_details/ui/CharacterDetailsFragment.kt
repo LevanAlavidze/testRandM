@@ -9,20 +9,21 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.testrickmorty.feature.character_details.vm.CharacterDetailsViewModel
-import com.example.testrickmorty.feature.character_details.vm.CharacterDetailsViewModelFactory
 import com.example.testrickmorty.feature.episodes.adapter.EpisodeAdapter
-import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
+import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.databinding.FragmentCharacterDetailsBinding
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class CharacterDetailsFragment : Fragment(R.layout.fragment_character_details) {
     private lateinit var binding: FragmentCharacterDetailsBinding
-    private val viewModel: CharacterDetailsViewModel by viewModels {
-        CharacterDetailsViewModelFactory(
-            (requireActivity().application as MyApplication).repository,
-            requireArguments().getInt("characterId")
-        )
-    }
+
+    @Inject
+    lateinit var repository: Repository
+
+    private val viewModel: CharacterDetailsViewModel by viewModels()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -38,6 +39,10 @@ class CharacterDetailsFragment : Fragment(R.layout.fragment_character_details) {
 
         binding.episodeRecyclerView.layoutManager = LinearLayoutManager(context)
         binding.episodeRecyclerView.adapter = episodeAdapter
+
+        // Retrieve characterId from arguments
+        val characterId = requireArguments().getInt("characterId")
+        viewModel.setCharacterId(characterId)
 
         viewModel.character.observe(viewLifecycleOwner) { character ->
             character?.let {

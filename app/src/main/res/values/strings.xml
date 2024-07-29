@@ -20,8 +20,8 @@
         <item>Humanoid</item>
     </string-array>
 
-    <string name="episode_hint_number">episode num</string>
-    <string name="name_hint">episode name</string>
+    <string name="episode_hint_number">episode name</string>
+    <string name="name_hint">episode num</string>
     <string name="apply_filters">Apply Filters</string>
 
     <string name="location_name">name</string>
