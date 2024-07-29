@@ -56,6 +56,9 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
 
                 currentPage = page
                 isLastPage = fetchedEpisodes.isEmpty()
+
+                // Save fetched characters to the database
+                repository.saveEpisodesToDatabase(fetchedEpisodes)
             } catch (e: HttpException) {
                 if (e.code() == 404) {
                     isLastPage = true
@@ -63,12 +66,28 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
                     _errorMessage.value = "Error fetching episodes: ${e.message()}"
                     Log.e("EpisodeViewModel", "Error fetching episodes", e)
                 }
+
+                // Load cached data as fallback
+                loadCachedEpisodes()
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching episodes: ${e.message}"
                 Log.e("EpisodeViewModel", "Error fetching episodes", e)
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
+            }
+        }
+    }
+
+    private fun loadCachedEpisodes() {
+        viewModelScope.launch {
+            try {
+                val cachedEpisodes = repository.getCachedEpisodes()
+                _episodes.value = cachedEpisodes
+                Log.d("EpisodeViewModel", "Loaded cached episodes: ${cachedEpisodes.size} items")
+            } catch (cacheException: Exception) {
+                _errorMessage.value = "Error loading cached episodes: ${cacheException.message}"
+                Log.e("EpisodeViewModel", "Error loading cached episodes: ${cacheException.message}")
             }
         }
     }

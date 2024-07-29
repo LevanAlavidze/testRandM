@@ -46,8 +46,8 @@ class CharacterViewModel @Inject constructor(private val repository: Repository)
         _isLoading.value = true
         viewModelScope.launch {
             try {
+                Log.d("CharacterViewModel", "Fetching characters for page: $page")
                 val fetchedCharacters = repository.getCharacters(page)
-
                 val currentCharacters = if (page == 1) {
                     fetchedCharacters
                 } else {
@@ -57,6 +57,10 @@ class CharacterViewModel @Inject constructor(private val repository: Repository)
 
                 currentPage = page
                 isLastPage = fetchedCharacters.isEmpty()
+                Log.d("CharacterViewModel", "Fetched characters: ${fetchedCharacters.size} items")
+
+                // Save fetched characters to the database
+                repository.saveCharactersToDatabase(fetchedCharacters)
             } catch (e: HttpException) {
                 if (e.code() == 404) {
                     isLastPage = true
@@ -64,12 +68,28 @@ class CharacterViewModel @Inject constructor(private val repository: Repository)
                     _errorMessage.value = "Error fetching characters: ${e.message()}"
                     Log.e("CharacterViewModel", "Error fetching characters", e)
                 }
+                // Load cached data as fallback
+                loadCachedCharacters()
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching characters: ${e.message}"
                 Log.e("CharacterViewModel", "Error fetching characters", e)
+                // Load cached data as fallback
+                loadCachedCharacters()
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
+            }
+        }
+    }
+    private fun loadCachedCharacters() {
+        viewModelScope.launch {
+            try {
+                val cachedCharacters = repository.getCachedCharacters()
+                _characters.value = cachedCharacters
+                Log.d("CharacterViewModel", "Loaded cached characters: ${cachedCharacters.size} items")
+            } catch (cacheException: Exception) {
+                _errorMessage.value = "Error loading cached characters: ${cacheException.message}"
+                Log.e("CharacterViewModel", "Error loading cached characters: ${cacheException.message}")
             }
         }
     }

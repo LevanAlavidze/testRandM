@@ -57,6 +57,9 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
 
                 currentPage = page
                 isLastPage = fetchedLocations.isEmpty()
+
+                // Save fetched locations to the database
+                repository.saveLocationsToDatabase(fetchedLocations)
             } catch (e: HttpException) {
                 if (e.code() == 404) {
                     isLastPage = true
@@ -64,12 +67,32 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
                     _errorMessage.value = "Error fetching locations: ${e.message()}"
                     Log.e("LocationsViewModel", "Error fetching locations", e)
                 }
+                // Load cached data as fallback
+                loadCachedLocations()
             }catch (e: Exception) {
                 _errorMessage.value = "Error fetching locations: ${e.message}"
                 Log.e("LocationsViewModel", "Error fetching locations", e)
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
+            }
+        }
+    }
+
+    private fun loadCachedLocations(){
+        viewModelScope.launch {
+            try {
+                val cachedLocations = repository.getCachedLocations()
+                _locations.value = cachedLocations
+                Log.d(
+                    "LocationsViewModel",
+                    "Loaded cached locations: ${cachedLocations.size} items"
+                )
+            }catch (cacheException: Exception) {
+                _errorMessage.value = "Error loading cached locations: ${cacheException.message}"
+                Log.e(
+                    "LocationsViewModel",
+                    "Error loading cached locations: ${cacheException.message}")
             }
         }
     }
@@ -136,14 +159,13 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
             try {
                 val response =
                     repository.getFilteredLocations(filterName, filterType, filterDimension, page)
-                val fetchedLocations = response
 
                 val currentLocations = _locations.value.orEmpty().toMutableList()
-                currentLocations.addAll(fetchedLocations)
+                currentLocations.addAll(response)
                 _locations.value = currentLocations.distinctBy { it.id }
 
                 currentPage = page
-                isLastPage = fetchedLocations.isEmpty()
+                isLastPage = response.isEmpty()
             } catch (e: HttpException) {
                 if (e.code() == 404) {
                     isLastPage = true
