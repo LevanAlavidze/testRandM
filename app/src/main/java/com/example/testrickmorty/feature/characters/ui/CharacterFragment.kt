@@ -30,8 +30,6 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
             val status = filters["status"] ?: ""
             val gender = filters["gender"] ?: ""
             val species = filters["species"] ?: ""
-
-
             viewModel.fetchFilteredCharacters(name, status, gender, species)
         }
         filterFragment.show(parentFragmentManager, "FilterDialog")
@@ -39,7 +37,6 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("CharacterFragment", "Fragment view created")
         binding = FragmentCharacterBinding.bind(view)
 
         adapter = CharacterAdapter{ characterId ->
@@ -72,16 +69,14 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            Log.d("CharacterFragment", "Loading state: $isLoading")
             binding.swipeRefreshLayout.isRefreshing = isLoading
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            Log.d("CharacterFragment", "Error message: $message")
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
+
         viewModel.noResults.observe(viewLifecycleOwner) { noResults ->
             if (noResults) {
                 // Show a message or UI indicating no results
@@ -90,7 +85,6 @@ class CharacterFragment : Fragment(R.layout.fragment_character) {
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            Log.d("CharacterFragment", "Refreshing characters")
             viewModel.fetchCharacters(1)
         }
         viewModel.fetchCharacters(1)

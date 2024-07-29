@@ -2,6 +2,7 @@ package com.example.testrickmorty.feature.episodes.ui
 
 import android.content.res.Configuration
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
@@ -11,19 +12,16 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.testrickmorty.feature.episodes.vm.EpisodeViewModel
-import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
 import com.example.testrickmorty.databinding.FragmentEpisodesBinding
 import com.example.testrickmorty.feature.episodes.adapter.EpisodeAdapter
-import com.example.testrickmorty.feature.episodes.di.EpisodeViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
-    private val viewModel: EpisodeViewModel by viewModels {
-        EpisodeViewModelFactory((requireActivity().application as MyApplication).repository)
-    }
+    private val viewModel: EpisodeViewModel by viewModels()
     private lateinit var binding: FragmentEpisodesBinding
     private lateinit var adapter: EpisodeAdapter
-
 
     private fun showFilterDialog() {
         val filterFragment = EpisodeFilterFragment()
@@ -48,6 +46,7 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
             binding.btnFilter.setOnClickListener {
                 showFilterDialog()
             }
+
             binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
             binding.episodeRecyclerView.adapter = adapter
 
@@ -83,29 +82,31 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
+            Log.d("EpisodesFragment", "Swipe-to-refresh triggered")
             viewModel.fetchEpisodes(1)
         }
+
         viewModel.fetchEpisodes(1)
 
-        // Search functionality
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) {
-                    viewModel.searchEpisodes(query)
+                query?.let {
+                    viewModel.searchEpisodes(it)
                 }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrBlank()) {
-                    // Clear the search and show all episodes
-                    viewModel.searchEpisodes("")
                     viewModel.fetchEpisodes(1)
+                } else {
+                    viewModel.searchEpisodes(newText)
                 }
                 return true
             }
         })
     }
+
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         viewModel.episodes.value?.let { adapter.submitList(it.toList()) }

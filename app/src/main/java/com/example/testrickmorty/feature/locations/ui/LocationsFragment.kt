@@ -16,15 +16,13 @@ import com.example.testrickmorty.MyApplication
 import com.example.testrickmorty.R
 import com.example.testrickmorty.databinding.FragmentLocationsBinding
 import com.example.testrickmorty.feature.locations.adapter.LocationsAdapter
-import com.example.testrickmorty.feature.locations.di.LocationsViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class LocationsFragment : Fragment(R.layout.fragment_locations) {
-    private val viewModel: LocationsViewModel by viewModels {
-        LocationsViewModelFactory((requireActivity().application as MyApplication).repository)
-    }
+    private val viewModel: LocationsViewModel by viewModels ()
     private lateinit var binding: FragmentLocationsBinding
     private lateinit var adapter: LocationsAdapter
-
 
     private fun showFilterDialog() {
         val filterFragment = LocationFilterFragment()
@@ -39,7 +37,6 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        Log.d("LocationsFragment", "Fragment View Created")
         binding = FragmentLocationsBinding.bind(view)
 
         adapter = LocationsAdapter {locationId ->
@@ -47,7 +44,8 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
                 putInt("locationId", locationId)
                 }
                 findNavController().navigate(R.id.locationDetailFragment, bundle)
-            }
+        }
+
         binding.btnFilter.setOnClickListener {
             showFilterDialog()
         }
@@ -69,19 +67,15 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
         })
 
         viewModel.locations.observe(viewLifecycleOwner) { locations ->
-            Log.d("LocationsFragment", "Updating Locations List with ${locations.size} items")
             adapter.submitList(locations)
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-
-            Log.d("LocationsFragment", "Loading State: $isLoading")
             binding.swipeRefreshLayout.isRefreshing = isLoading
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            Log.d("LocationsFragment", "Error Message: $message")
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
         viewModel.noResults.observe(viewLifecycleOwner) { noResults ->
@@ -91,30 +85,27 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
             }
         }
         binding.swipeRefreshLayout.setOnRefreshListener {
-            Log.d("LocationsFragment", "Swipe Refresh Triggered")
             viewModel.fetchLocations(1)
         }
         viewModel.fetchLocations(1)
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
-                if (query != null) {
-                    viewModel.searchLocations(query)
+                query?.let {
+                    viewModel.searchLocations(it)
                 }
                 return true
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 if (newText.isNullOrBlank()) {
-                    viewModel.searchLocations("")
                     viewModel.fetchLocations(1)
+                } else {
+                    viewModel.searchLocations(newText)
                 }
                 return true
             }
         })
-
-        Log.d("LocationsFragment", "Initial Fetch Triggered")
-        viewModel.fetchLocations(1)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.feature.locations.models.Location
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import javax.inject.Inject
 
-class LocationsViewModel(private val repository: Repository) : ViewModel() {
+@HiltViewModel
+class LocationsViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
     private val _locations = MutableLiveData<List<Location>>()
     val locations: LiveData<List<Location>> get() = _locations
@@ -35,7 +38,7 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
 
 
     fun fetchLocations(page: Int) {
-        if (_isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
+        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
             return
         }
 
@@ -123,7 +126,7 @@ class LocationsViewModel(private val repository: Repository) : ViewModel() {
         }
     }
 
-    fun fetchFilteredLocationsNextPage(page: Int) {
+    private fun fetchFilteredLocationsNextPage(page: Int) {
         if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
             return
         }

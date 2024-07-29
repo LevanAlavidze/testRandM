@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.feature.episodes.models.Episode
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import javax.inject.Inject
 
-class EpisodeViewModel(private val repository: Repository) : ViewModel() {
+@HiltViewModel
+class EpisodeViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
 
     private val _episodes = MutableLiveData<List<Episode>>()
     val episodes: LiveData<List<Episode>> get() = _episodes
@@ -37,7 +40,7 @@ class EpisodeViewModel(private val repository: Repository) : ViewModel() {
         if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
             return
         }
-
+        Log.d("EpisodeViewModel", "Fetching episodes for page: $page")
         pageLoadingStates[page] = true
         _isLoading.value = true
         viewModelScope.launch {
