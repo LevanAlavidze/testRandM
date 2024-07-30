@@ -1,6 +1,7 @@
 package com.example.testrickmorty.data
 
 import android.app.Application
+import android.content.Context
 import androidx.room.Room
 import com.example.testrickmorty.feature.characters.data.CharacterDao
 import com.example.testrickmorty.feature.episodes.data.EpisodeDao
@@ -16,6 +17,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides
+    @Singleton
+    fun provideApplicationContext(app: Application): Context = app.applicationContext
+
 
     @Provides
     @Singleton
@@ -56,8 +61,9 @@ object AppModule {
         apiService: ApiService,
         characterDao: CharacterDao,
         locationDao: LocationDao,
-        episodeDao: EpisodeDao
+        episodeDao: EpisodeDao,
+        app: Application
     ): Repository {
-        return Repository(apiService, characterDao, locationDao, episodeDao)
+        return Repository(apiService, characterDao, locationDao, episodeDao, app)
     }
 }

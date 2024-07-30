@@ -3,6 +3,7 @@ package com.example.testrickmorty.data
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.example.testrickmorty.data.NetworkUtils.hasNetwork
 import com.example.testrickmorty.feature.characters.models.Character
 import com.example.testrickmorty.feature.characters.models.CharacterResponse
 import com.example.testrickmorty.feature.episodes.models.Episode
@@ -32,7 +33,6 @@ interface ApiService {
     suspend fun getEpisodes(@Query("page") page: Int): EpisodeResponse
 
     @GET("character/{id}")
-
     suspend fun getCharacter(@Path("id") id: Int): Response<Character>
 
     @GET("location/{id}")
@@ -40,9 +40,6 @@ interface ApiService {
 
     @GET
     suspend fun getCharacterByUrl(@Url url: String): Response<Character>
-
-    @GET("character")
-    suspend fun getCharactersByPage(@Query("page") page: Int): List<Character>
 
     @GET("episode/{id}")
     suspend fun getEpisode(@Path("id") episodeId: Int): Response<Episode>
@@ -83,7 +80,6 @@ interface ApiService {
         @Query("page") page: Int
     ): EpisodeResponse
 
-
     companion object {
         private const val BASE_URL = "https://rickandmortyapi.com/api/"
 
@@ -122,14 +118,12 @@ interface ApiService {
                 .create(ApiService::class.java)
         }
 
-        private fun hasNetwork(context: Context): Boolean {
-            val connectivityManager =
-                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+/*        fun hasNetwork(context: Context): Boolean {
+            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val network = connectivityManager.activeNetwork
             val capabilities = connectivityManager.getNetworkCapabilities(network)
-            return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(
-                NetworkCapabilities.TRANSPORT_CELLULAR
-            ))
+            return capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
         }
-    }
+    }*/
+}
 }

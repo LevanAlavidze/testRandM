@@ -13,4 +13,14 @@ interface CharacterDao {
 
     @Query("SELECT * FROM character")
     suspend fun getAllCharacters(): List<CharacterEntity>
+
+    @Query("""
+    SELECT * FROM character
+    WHERE name LIKE '%' || :name || '%'
+    AND status LIKE '%' || :status || '%'
+    AND species LIKE '%' || :species || '%'
+    AND gender LIKE '%' || :gender || '%'
+""")
+    suspend fun getFilteredCharacters(name: String, status: String, species: String, gender: String): List<CharacterEntity>
+
 }

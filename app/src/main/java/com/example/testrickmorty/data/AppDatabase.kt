@@ -11,12 +11,10 @@ import com.example.testrickmorty.feature.episodes.data.models.EpisodeEntity
 import com.example.testrickmorty.feature.locations.data.LocationDao
 import com.example.testrickmorty.feature.locations.data.models.LocationEntity
 
-@Database(entities = [CharacterEntity::class, LocationEntity::class, EpisodeEntity::class], version = 2)
+@Database(entities = [CharacterEntity::class, LocationEntity::class, EpisodeEntity::class], version = 1)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun characterDao(): CharacterDao
     abstract fun locationDao(): LocationDao
     abstract fun episodeDao(): EpisodeDao
-
 }
