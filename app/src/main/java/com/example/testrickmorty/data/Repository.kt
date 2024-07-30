@@ -1,6 +1,7 @@
 package com.example.testrickmorty.data
 
 import android.util.Log
+import androidx.lifecycle.MutableLiveData
 import com.example.testrickmorty.feature.characters.data.CharacterDao
 import com.example.testrickmorty.feature.characters.data.model.CharacterEntity
 import com.example.testrickmorty.feature.characters.models.Character
@@ -19,6 +20,7 @@ class Repository @Inject constructor(
     private val locationDao: LocationDao,
     private val episodeDao: EpisodeDao
 ) {
+    val errorMessage = MutableLiveData<String>()
 
     // Fetching from API
     suspend fun getCharacters(page: Int): List<Character> {
@@ -33,12 +35,14 @@ class Repository @Inject constructor(
         }
         return response.results
     }
+
     suspend fun getLocations(page: Int): List<Location> {
         Log.d("Repository", "Fetching locations from API for page: $page")
         val response = apiService.getLocations(page)
         Log.d("Repository", "API Response: ${response.results.size} locations fetched")
         return response.results
     }
+
     suspend fun getEpisodes(page: Int): List<Episode> {
         Log.d("Repository", "Fetching episodes from API for page: $page")
         val episodes = apiService.getEpisodes(page)
@@ -54,23 +58,32 @@ class Repository @Inject constructor(
             throw Exception("Failed to fetch character details")
         }
     }
+
     suspend fun getLocation(locationId: Int): Location {
+        Log.d("Repository", "Fetching location from API for ID: $locationId")
         val response = apiService.getLocation(locationId)
         if (response.isSuccessful) {
-            return response.body() ?: throw Exception("Location not found")
+            val location = response.body() ?: throw Exception("Location not found")
+            Log.d("Repository", "Fetched location: $location")
+            return location
         } else {
+            Log.e("Repository", "Failed to fetch location details: ${response.errorBody()?.string()}")
             throw Exception("Failed to fetch location details")
         }
     }
+
     suspend fun getEpisode(episodeId: Int): Episode {
         val response = apiService.getEpisode(episodeId)
+        Log.d("Repository", "Response: ${response.body()}")
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("Episode not found")
         } else {
             throw Exception("Failed to fetch episode details")
         }
     }
-    // Fetching
+
+
+    // Fetching by URLs
     suspend fun getCharactersByUrls(urls: List<String>): List<Character> {
         val characters = mutableListOf<Character>()
         for (url in urls) {
@@ -80,12 +93,14 @@ class Repository @Inject constructor(
                     response.body()?.let { characters.add(it) }
                 }
             } catch (e: Exception) {
-                // Handle exceptions appropriately
                 Log.e("Repository", "Error fetching character from URL $url: ${e.message}")
             }
         }
+        Log.d("Repository", "Fetched ${characters.size} characters from URLs")
         return characters
     }
+
+
     suspend fun getEpisodesByUrls(urls: List<String>): List<Episode> {
         return urls.mapNotNull { url ->
             try {
@@ -102,12 +117,14 @@ class Repository @Inject constructor(
         val response = apiService.getFilteredCharacters(name, status, species, gender, page)
         return response.results
     }
+
     suspend fun getFilteredEpisodes(name: String, episode: String, page: Int): List<Episode> {
         val response = apiService.getFilteredEpisodes(name, episode, page)
         return response.results
     }
+
     suspend fun getFilteredLocations(name: String, type: String, dimension: String, page: Int): List<Location> {
-        val response = apiService.getFilteredLocations(name, type,dimension, page)
+        val response = apiService.getFilteredLocations(name, type, dimension, page)
         return response.results
     }
 
@@ -139,14 +156,19 @@ class Repository @Inject constructor(
         characterDao.insertAll(characterEntities)
         Log.d("Repository", "Characters saved to database")
     }
+
     suspend fun saveLocationsToDatabase(locations: List<Location>) {
         Log.d("Repository", "Saving ${locations.size} locations to database")
+        locations.forEach { location ->
+            Log.d("Repository", "Saving location to DB: $location")
+        }
         val locationEntities = locations.map {
             LocationEntity(
                 id = it.id,
                 name = it.name,
                 type = it.type,
-                dimension = it.dimension
+                dimension = it.dimension,
+                residents = it.residents
             )
         }
         locationDao.insertAll(locationEntities)
@@ -159,7 +181,8 @@ class Repository @Inject constructor(
                 id = episode.id,
                 name = episode.name,
                 episode = episode.episode,
-                airDate = episode.airDate ?: "Unknown"
+                airDate = episode.airDate ?: "Unknown",
+                characterUrls = episode.characters // Assuming `episode.characters` contains URLs
             )
         }
         episodeDao.insertAll(episodeEntities)
@@ -190,7 +213,7 @@ class Repository @Inject constructor(
                     name = characterEntity.location ?: "Unknown",
                     type = "",
                     dimension = "",
-                    residents = emptyList() // Add this line
+                    residents = emptyList()
                 ),
                 image = characterEntity.image,
                 episode = characterEntity.episode,
@@ -201,6 +224,7 @@ class Repository @Inject constructor(
         Log.d("Repository", "Cached ${cachedCharacters.size} characters fetched")
         return cachedCharacters
     }
+
     suspend fun getCachedLocations(): List<Location> {
         Log.d("Repository", "Fetching cached locations from database")
         val cachedLocations = locationDao.getAllLocations().map { locationEntity ->
@@ -209,12 +233,13 @@ class Repository @Inject constructor(
                 name = locationEntity.name,
                 type = locationEntity.type,
                 dimension = locationEntity.dimension,
-                residents = emptyList() // Provide an empty list here
+                residents = locationEntity.residents // Ensure this matches the actual data
             )
         }
         Log.d("Repository", "Cached ${cachedLocations.size} locations fetched")
         return cachedLocations
     }
+
     suspend fun getCachedEpisodes(): List<Episode> {
         Log.d("Repository", "Fetching cached episodes from database")
         val cachedEpisodes = episodeDao.getAllEpisodes().map { episodeEntity ->
@@ -223,7 +248,7 @@ class Repository @Inject constructor(
                 name = episodeEntity.name,
                 episode = episodeEntity.episode,
                 airDate = episodeEntity.airDate,
-                characters = emptyList()
+                characters = episodeEntity.characterUrls // Retrieve character URLs
             )
         }
         Log.d("Repository", "Cached ${cachedEpisodes.size} episodes fetched")

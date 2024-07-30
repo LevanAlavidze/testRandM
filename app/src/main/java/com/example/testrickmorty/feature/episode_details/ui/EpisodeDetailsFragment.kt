@@ -28,6 +28,8 @@ class EpisodeDetailsFragment : Fragment(R.layout.fragment_episode_details) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        Log.d("EpisodeDetailsFragment", "onViewCreated called")
+
         binding = FragmentEpisodeDetailsBinding.bind(view)
 
         val characterAdapter = CharacterAdapter { characterId ->
@@ -42,30 +44,27 @@ class EpisodeDetailsFragment : Fragment(R.layout.fragment_episode_details) {
 
         // Retrieve episodeId from arguments
         val episodeId = requireArguments().getInt("episodeId")
+        Log.d("EpisodeDetailsFragment", "Received episodeId: $episodeId")
         viewModel.setEpisodeId(episodeId)
 
         viewModel.episode.observe(viewLifecycleOwner) { episode ->
             episode?.let {
+                Log.d("EpisodeDetailsFragment", "Episode data updated: $it")
                 binding.episodeName.text = it.name
                 binding.episodeAirDate.text = it.airDate
-
             }
         }
 
         viewModel.episodeCharacters.observe(viewLifecycleOwner) { characters ->
             characters?.let {
-                characterAdapter.submitList(it)
+                Log.d("EpisodeDetailsFragment", "Updating adapter with characters: $characters")
+                characterAdapter.submitList(characters)
             }
         }
-        binding.episodeName.setOnClickListener {
-            val episodeId = viewModel.episode.value?.id ?: return@setOnClickListener
-            val bundle = Bundle().apply {
-                putInt("episodeId", episodeId)
-            }
-            findNavController().navigate(R.id.episodeDetailFragment, bundle)
-        }
+
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             message?.let {
+                Log.e("EpisodeDetailsFragment", "Error message received: $message")
                 Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             }
         }

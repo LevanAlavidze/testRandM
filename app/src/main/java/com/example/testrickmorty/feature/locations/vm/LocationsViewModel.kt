@@ -72,6 +72,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
             }catch (e: Exception) {
                 _errorMessage.value = "Error fetching locations: ${e.message}"
                 Log.e("LocationsViewModel", "Error fetching locations", e)
+                loadCachedLocations()
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false

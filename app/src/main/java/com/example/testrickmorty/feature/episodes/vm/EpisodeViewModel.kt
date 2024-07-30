@@ -66,12 +66,12 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
                     _errorMessage.value = "Error fetching episodes: ${e.message()}"
                     Log.e("EpisodeViewModel", "Error fetching episodes", e)
                 }
-
                 // Load cached data as fallback
                 loadCachedEpisodes()
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching episodes: ${e.message}"
                 Log.e("EpisodeViewModel", "Error fetching episodes", e)
+                loadCachedEpisodes()
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
