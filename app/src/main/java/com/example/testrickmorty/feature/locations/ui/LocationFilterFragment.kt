@@ -22,9 +22,7 @@ class LocationFilterFragment : DialogFragment() {
     ): View? {
         binding = FragmentLocationFilterBinding.inflate(inflater, container, false)
 
-        binding.btnApplyFilter.setOnClickListener {
-            applyFilters()
-        }
+        binding.btnApplyFilter.setOnClickListener { applyFilters() }
         return binding.root
     }
 
@@ -35,6 +33,6 @@ class LocationFilterFragment : DialogFragment() {
             "dimension" to binding.etDimension.text.toString()
         )
         onFilterAppliedListener?.invoke(filters)
-            dismiss()
+        dismiss()
     }
 }

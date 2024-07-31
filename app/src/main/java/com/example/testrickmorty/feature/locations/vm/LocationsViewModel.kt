@@ -43,6 +43,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
 
         pageLoadingStates[page] = true
         _isLoading.value = true
+
         viewModelScope.launch {
             try {
                 val fetchedLocations = repository.getLocations(page)
@@ -106,7 +107,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
     fun searchLocations(query: String) {
         currentSearchQuery = query
         isFiltering = query.isNotBlank()
-        fetchFilteredLocations(query, "", "", 1)
+        fetchFilteredLocations(query, filterType, filterDimension, 1)
     }
 
     fun fetchFilteredLocations(name: String, type: String, dimension: String, page: Int = 1) {
@@ -151,6 +152,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
         }
         pageLoadingStates[page] = true
         _isLoading.value = true
+
         viewModelScope.launch {
             try {
                 val response = repository.getFilteredLocations(filterName, filterType, filterDimension, page)
