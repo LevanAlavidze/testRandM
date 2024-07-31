@@ -1,6 +1,5 @@
 package com.example.testrickmorty.feature.episodes.vm
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -35,47 +34,54 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
     private var filterName: String = ""
     private var filterEpisode: String = ""
 
-
     fun fetchEpisodes(page: Int) {
-        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
-            return
-        }
-        Log.d("EpisodeViewModel", "Fetching episodes for page: $page")
-        pageLoadingStates[page] = true
-        _isLoading.value = true
+        if (shouldSkipFetch(page)) return
+
+        updateLoadingState(page, true)
+
         viewModelScope.launch {
             try {
                 val fetchedEpisodes = repository.getEpisodes(page)
-
-                val currentEpisodes = if (page == 1) {
-                    fetchedEpisodes
-                } else {
-                    _episodes.value.orEmpty().toMutableList().apply { addAll(fetchedEpisodes) }
-                }
-                _episodes.value = currentEpisodes.distinctBy { it.id }
-
-                currentPage = page
-                isLastPage = fetchedEpisodes.isEmpty()
-
-                // Save fetched characters to the database
-                repository.saveEpisodesToDatabase(fetchedEpisodes)
+                handleFetchedEpisodes(fetchedEpisodes, page)
             } catch (e: HttpException) {
-                if (e.code() == 404) {
-                    isLastPage = true
-                } else {
-                    _errorMessage.value = "Error fetching episodes: ${e.message()}"
-                    Log.e("EpisodeViewModel", "Error fetching episodes", e)
-                }
-                // Load cached data as fallback
+                handleException(e)
                 loadCachedEpisodes()
             } catch (e: Exception) {
-                _errorMessage.value = "Error fetching episodes: ${e.message}"
-                Log.e("EpisodeViewModel", "Error fetching episodes", e)
+                handleException(e)
                 loadCachedEpisodes()
             } finally {
-                _isLoading.value = false
-                pageLoadingStates[page] = false
+                updateLoadingState(page, false)
             }
+        }
+    }
+
+    private fun shouldSkipFetch(page: Int) =
+        isLoading.value == true || isLastPage || pageLoadingStates[page] == true
+
+    private fun updateLoadingState(page: Int, isLoading: Boolean) {
+        pageLoadingStates[page] = isLoading
+        _isLoading.value = isLoading
+    }
+
+    private suspend fun handleFetchedEpisodes(fetchedEpisodes: List<Episode>, page: Int) {
+        val currentEpisodes = if (page == 1) {
+            fetchedEpisodes
+        } else {
+            _episodes.value.orEmpty().toMutableList().apply { addAll(fetchedEpisodes) }
+        }
+        _episodes.value = currentEpisodes.distinctBy { it.id }
+
+        currentPage = page
+        isLastPage = fetchedEpisodes.isEmpty()
+
+        repository.saveEpisodesToDatabase(fetchedEpisodes)
+    }
+
+    private fun handleException(e: Exception) {
+        if (e is HttpException && e.code() == 404) {
+            isLastPage = true
+        } else {
+            _errorMessage.value = "Error fetching episodes: ${e.message}"
         }
     }
 
@@ -84,10 +90,8 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
             try {
                 val cachedEpisodes = repository.getCachedEpisodes()
                 _episodes.value = cachedEpisodes
-                Log.d("EpisodeViewModel", "Loaded cached episodes: ${cachedEpisodes.size} items")
             } catch (cacheException: Exception) {
                 _errorMessage.value = "Error loading cached episodes: ${cacheException.message}"
-                Log.e("EpisodeViewModel", "Error loading cached episodes: ${cacheException.message}")
             }
         }
     }
@@ -106,7 +110,6 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
         fetchFilteredEpisodes(query, "", 1)
     }
 
-
     fun fetchFilteredEpisodes(name: String, episode: String, page: Int = 1) {
         _isLoading.value = true
         isFiltering = true
@@ -119,21 +122,9 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
         viewModelScope.launch {
             try {
                 val filteredEpisodes = repository.getFilteredEpisodes(name, episode, page)
-                if (filteredEpisodes.isEmpty()) {
-                    _noResults.value = true
-                    _episodes.value = emptyList()
-                } else {
-                    val currentEpisodes = if (page == 1) {
-                        filteredEpisodes
-                    } else {
-                        _episodes.value.orEmpty().toMutableList().apply { addAll(filteredEpisodes) }
-                    }
-                    _episodes.value = currentEpisodes.distinctBy { it.id }
-                    _noResults.value = false
-                }
+                handleFilteredEpisodes(filteredEpisodes)
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching filtered episodes: ${e.message}"
-                Log.e("EpisodeViewModel", "Error fetching filtered episodes", e)
                 _episodes.value = emptyList()
                 _noResults.value = true
             } finally {
@@ -142,37 +133,38 @@ class EpisodeViewModel @Inject constructor(private val repository: Repository) :
         }
     }
 
-    private fun fetchFilteredEpisodesNextPage(page: Int) {
-        if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
-            return
+    private fun handleFilteredEpisodes(filteredEpisodes: List<Episode>) {
+        if (filteredEpisodes.isEmpty()) {
+            _noResults.value = true
+            _episodes.value = emptyList()
+        } else {
+            val currentEpisodes = if (currentPage == 1) {
+                filteredEpisodes
+            } else {
+                _episodes.value.orEmpty().toMutableList().apply { addAll(filteredEpisodes) }
+            }
+            _episodes.value = currentEpisodes.distinctBy { it.id }
+            _noResults.value = false
         }
+    }
 
-        pageLoadingStates[page] = true
-        _isLoading.value = true
+    private fun fetchFilteredEpisodesNextPage(page: Int) {
+        if (shouldSkipFetch(page)) return
+
+        updateLoadingState(page, true)
+
         viewModelScope.launch {
             try {
                 val response = repository.getFilteredEpisodes(filterName, filterEpisode, page)
-                val fetchedEpisodes = response
-
-                val currentEpisodes = _episodes.value.orEmpty().toMutableList()
-                currentEpisodes.addAll(fetchedEpisodes)
-                _episodes.value = currentEpisodes.distinctBy { it.id }
-
+                handleFilteredEpisodes(response)
                 currentPage = page
-                isLastPage = fetchedEpisodes.isEmpty()
+                isLastPage = response.isEmpty()
             } catch (e: HttpException) {
-                if (e.code() == 404) {
-                    isLastPage = true
-                } else {
-                    _errorMessage.value = "Error fetching episodes: ${e.message()}"
-                    Log.e("EpisodeViewModel", "Error fetching episodes", e)
-                }
+                handleException(e)
             } catch (e: Exception) {
                 _errorMessage.value = "Error fetching episodes: ${e.message}"
-                Log.e("EpisodeViewModel", "Error fetching episodes", e)
             } finally {
-                _isLoading.value = false
-                pageLoadingStates[page] = false
+                updateLoadingState(page, false)
             }
         }
     }

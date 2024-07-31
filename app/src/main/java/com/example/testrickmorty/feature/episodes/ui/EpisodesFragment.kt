@@ -2,7 +2,6 @@ package com.example.testrickmorty.feature.episodes.ui
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
@@ -19,9 +18,66 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
+
     private val viewModel: EpisodeViewModel by viewModels()
     private lateinit var binding: FragmentEpisodesBinding
     private lateinit var adapter: EpisodeAdapter
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding = FragmentEpisodesBinding.bind(view)
+
+        setupRecyclerView()
+        setupListeners()
+        observeViewModel()
+        viewModel.fetchEpisodes(1)
+    }
+
+    private fun setupRecyclerView() {
+        adapter = EpisodeAdapter { episodeId ->
+            val bundle = Bundle().apply { putInt("episodeId", episodeId) }
+            findNavController().navigate(R.id.episodeDetailFragment, bundle)
+        }
+        binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
+        binding.episodeRecyclerView.adapter = adapter
+        binding.episodeRecyclerView.addOnScrollListener(createScrollListener())
+    }
+
+    private fun createScrollListener() = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+            val layoutManager = recyclerView.layoutManager as GridLayoutManager
+            val totalItemCount = layoutManager.itemCount
+            val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+            if (lastVisibleItem >= totalItemCount - 1) {
+                viewModel.fetchNextPage()
+            }
+        }
+    }
+
+    private fun setupListeners() {
+        binding.btnFilter.setOnClickListener { showFilterDialog() }
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.fetchEpisodes(1)
+        }
+        binding.searchView.setOnQueryTextListener(createSearchListener())
+    }
+
+    private fun createSearchListener() = object : SearchView.OnQueryTextListener {
+        override fun onQueryTextSubmit(query: String?): Boolean {
+            query?.let { viewModel.searchEpisodes(it) }
+            return true
+        }
+
+        override fun onQueryTextChange(newText: String?): Boolean {
+            if (newText.isNullOrBlank()) {
+                viewModel.fetchEpisodes(1)
+            } else {
+                viewModel.searchEpisodes(newText)
+            }
+            return true
+        }
+    }
 
     private fun showFilterDialog() {
         val filterFragment = EpisodeFilterFragment()
@@ -33,37 +89,10 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
         filterFragment.show(parentFragmentManager, "FilterDialog")
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding = FragmentEpisodesBinding.bind(view)
-
-        adapter = EpisodeAdapter { episodeId ->
-                val bundle = Bundle().apply {
-                    putInt("episodeId", episodeId)
-                }
-                findNavController().navigate(R.id.episodeDetailFragment, bundle)
-            }
-            binding.btnFilter.setOnClickListener {
-                showFilterDialog()
-            }
-
-            binding.episodeRecyclerView.layoutManager = GridLayoutManager(context, 2)
-            binding.episodeRecyclerView.adapter = adapter
-
-            binding.episodeRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    val layoutManager = recyclerView.layoutManager as GridLayoutManager
-                    val totalItemCount = layoutManager.itemCount
-                    val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-                    if (lastVisibleItem >= totalItemCount - 1) {
-                        viewModel.fetchNextPage()
-                    }
-                }
-            })
-            viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
-                adapter.submitList(episodes)
-            }
+    private fun observeViewModel() {
+        viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
+            adapter.submitList(episodes)
+        }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.swipeRefreshLayout.isRefreshing = isLoading
@@ -76,35 +105,9 @@ class EpisodesFragment : Fragment(R.layout.fragment_episodes) {
 
         viewModel.noResults.observe(viewLifecycleOwner) { noResults ->
             if (noResults) {
-                // Show a message or UI indicating no results
                 Toast.makeText(requireContext(), "No episodes found", Toast.LENGTH_SHORT).show()
             }
         }
-
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            Log.d("EpisodesFragment", "Swipe-to-refresh triggered")
-            viewModel.fetchEpisodes(1)
-        }
-
-        viewModel.fetchEpisodes(1)
-
-        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                query?.let {
-                    viewModel.searchEpisodes(it)
-                }
-                return true
-            }
-
-            override fun onQueryTextChange(newText: String?): Boolean {
-                if (newText.isNullOrBlank()) {
-                    viewModel.fetchEpisodes(1)
-                } else {
-                    viewModel.searchEpisodes(newText)
-                }
-                return true
-            }
-        })
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
