@@ -13,11 +13,13 @@ import com.example.testrickmorty.feature.episodes.adapter.EpisodeAdapter
 import com.example.testrickmorty.R
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.databinding.FragmentCharacterDetailsBinding
+import com.example.testrickmorty.feature.characters.models.Character
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class CharacterDetailsFragment : Fragment(R.layout.fragment_character_details) {
+
     private lateinit var binding: FragmentCharacterDetailsBinding
 
     @Inject
@@ -27,64 +29,76 @@ class CharacterDetailsFragment : Fragment(R.layout.fragment_character_details) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding = FragmentCharacterDetailsBinding.bind(view)
 
-        val episodeAdapter = EpisodeAdapter { episodeId ->
-            val bundle = Bundle().apply {
-                putInt("episodeId", episodeId)
-            }
-            findNavController().navigate(R.id.episodeDetailFragment, bundle)
-        }
-
-        binding.episodeRecyclerView.layoutManager = LinearLayoutManager(context)
-        binding.episodeRecyclerView.adapter = episodeAdapter
+        setupRecyclerView()
+        setupClickListeners()
+        observeViewModel()
 
         // Retrieve characterId from arguments
         val characterId = requireArguments().getInt("characterId")
         viewModel.setCharacterId(characterId)
+    }
 
-        viewModel.character.observe(viewLifecycleOwner) { character ->
-            character?.let {
-                binding.characterName.text = it.name
-                binding.characterSpecies.text = it.species
-                binding.characterStatus.text = it.status
-                binding.characterGender.text = it.gender
-                binding.characterLocation.text = it.location.name
-                binding.characterOrigin.text = it.origin.name
-
-                Glide.with(binding.characterImage.context)
-                    .load(it.image)
-                    .into(binding.characterImage)
-            }
+    private fun setupRecyclerView() {
+        val episodeAdapter = EpisodeAdapter { episodeId ->
+            val bundle = Bundle().apply { putInt("episodeId", episodeId) }
+            findNavController().navigate(R.id.episodeDetailFragment, bundle)
         }
 
-        viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
-            episodes?.let {
-                episodeAdapter.submitList(it)
-            }
+        binding.episodeRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = episodeAdapter
         }
+    }
 
+    private fun setupClickListeners() {
         binding.characterLocation.setOnClickListener {
-            val locationId = viewModel.character.value?.getOriginId() ?: return@setOnClickListener
-            val bundle = Bundle().apply {
-                putInt("locationId", locationId)
-            }
-            findNavController().navigate(R.id.locationDetailFragment, bundle)
+            navigateToLocationDetail(viewModel.character.value?.getOriginId())
         }
 
         binding.characterOrigin.setOnClickListener {
-            val originId = viewModel.character.value?.getOriginId() ?: return@setOnClickListener
-            val bundle = Bundle().apply {
-                putInt("locationId", originId)
-            }
+            navigateToLocationDetail(viewModel.character.value?.getOriginId())
+        }
+    }
+
+    private fun navigateToLocationDetail(locationId: Int?) {
+        locationId?.let {
+            val bundle = Bundle().apply { putInt("locationId", it) }
             findNavController().navigate(R.id.locationDetailFragment, bundle)
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.character.observe(viewLifecycleOwner) { character ->
+            character?.let { updateCharacterDetails(it) }
+        }
+
+        viewModel.episodes.observe(viewLifecycleOwner) { episodes ->
+            (binding.episodeRecyclerView.adapter as? EpisodeAdapter)?.submitList(episodes)
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            message?.let {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            }
+            message?.let { showToast(it) }
         }
+    }
+
+    private fun updateCharacterDetails(character: Character) {
+        with(binding) {
+            characterName.text = character.name
+            characterSpecies.text = character.species
+            characterStatus.text = character.status
+            characterGender.text = character.gender
+            characterLocation.text = character.location.name
+            characterOrigin.text = character.origin.name
+
+            Glide.with(characterImage.context)
+                .load(character.image)
+                .into(characterImage)
+        }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 }
