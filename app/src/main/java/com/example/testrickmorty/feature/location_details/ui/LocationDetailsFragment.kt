@@ -1,17 +1,17 @@
 package com.example.testrickmorty.feature.location_details.ui
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.View
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
-import com.example.testrickmorty.feature.location_details.vm.LocationDetailsViewModel
 import com.example.testrickmorty.R
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.databinding.FragmentLocationDetailsBinding
 import com.example.testrickmorty.feature.characters.adapter.CharacterAdapter
+import com.example.testrickmorty.feature.location_details.vm.LocationDetailsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -26,23 +26,32 @@ class LocationDetailsFragment : Fragment(R.layout.fragment_location_details) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         binding = FragmentLocationDetailsBinding.bind(view)
 
-        val characterAdapter = CharacterAdapter { locationId ->
+        val characterAdapter = setupCharacterAdapter()
+        setupRecyclerView(characterAdapter)
+
+        val locationId = requireArguments().getInt("locationId")
+        viewModel.setLocationId(locationId)
+
+        observeViewModel(characterAdapter)
+    }
+
+    private fun setupCharacterAdapter(): CharacterAdapter {
+        return CharacterAdapter { locationId ->
             val bundle = Bundle().apply {
                 putInt("locationId", locationId)
             }
             findNavController().navigate(R.id.locationDetailFragment, bundle)
         }
+    }
 
+    private fun setupRecyclerView(characterAdapter: CharacterAdapter) {
         binding.characterRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.characterRecyclerView.adapter = characterAdapter
+    }
 
-        // Retrieve locationId from arguments
-        val locationId = requireArguments().getInt("locationId")
-        viewModel.setLocationId(locationId)
-
+    private fun observeViewModel(characterAdapter: CharacterAdapter) {
         viewModel.location.observe(viewLifecycleOwner) { location ->
             location?.let {
                 binding.locationName.text = it.name
@@ -58,15 +67,17 @@ class LocationDetailsFragment : Fragment(R.layout.fragment_location_details) {
         }
 
         binding.locationName.setOnClickListener {
-            val locationId = viewModel.location.value?.id ?: return@setOnClickListener
-            val bundle = Bundle().apply {
-                putInt("locationId", locationId)
+            viewModel.location.value?.id?.let { locationId ->
+                val bundle = Bundle().apply {
+                    putInt("locationId", locationId)
+                }
+                findNavController().navigate(R.id.locationDetailFragment, bundle)
             }
-            findNavController().navigate(R.id.locationDetailFragment, bundle)
         }
+
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
             message?.let {
-                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             }
         }
     }

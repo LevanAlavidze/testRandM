@@ -1,11 +1,7 @@
 package com.example.testrickmorty.feature.location_details.vm
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.testrickmorty.feature.locations.models.Location
 import com.example.testrickmorty.data.Repository
 import com.example.testrickmorty.feature.characters.models.Character
@@ -37,55 +33,54 @@ class LocationDetailsViewModel @Inject constructor(
         locationId?.let { id ->
             viewModelScope.launch {
                 try {
-                    Log.d("LocationDetailsViewModel", "Starting to load location details for ID: $id")
-
-                    // Fetch location from API
-                    Log.d("LocationDetailsViewModel", "Fetching location from API")
-                    val location = repository.getLocation(id)
-                    Log.d("LocationDetailsViewModel", "Fetched location from API: $location")
-
-                    _location.value = location
-
-                    // Fetch characters associated with the location
-                    val characterUrls = location.residents
-                    Log.d("LocationDetailsViewModel", "Character URLs for location: $characterUrls")
-                    val characters = repository.getCharactersByUrls(characterUrls)
-                    Log.d("LocationDetailsViewModel", "Fetched characters from URLs: $characters")
-                    _residentCharacters.value = characters
-
-                    // Save fetched location and characters to the database
-                    Log.d("LocationDetailsViewModel", "Saving location and characters to database")
-                    repository.saveLocationsToDatabase(listOf(location))
-                    repository.saveCharactersToDatabase(characters)
-                    Log.d("LocationDetailsViewModel", "Location and characters saved to database")
+                    fetchLocationFromApi(id)
                 } catch (e: Exception) {
-                    _errorMessage.value = "Error fetching location details: ${e.message}"
-                    Log.e("LocationDetailsViewModel", "Error fetching location details", e)
-
-                    // Try to load from cache if network fails
-                    try {
-                        Log.d("LocationDetailsViewModel", "Loading location from cache for ID: $id")
-                        val cachedLocations = repository.getCachedLocations()
-                        Log.d("LocationDetailsViewModel", "Cached locations: $cachedLocations")
-                        val cachedLocation = cachedLocations.find { it.id == id }
-                        _location.value = cachedLocation
-
-                        cachedLocation?.let { location ->
-                            Log.d("LocationDetailsViewModel", "Cached location: $location")
-                            val cachedCharacters = repository.getCachedCharacters()
-                            Log.d("LocationDetailsViewModel", "Cached characters: $cachedCharacters")
-
-                            val filteredCharacters = cachedCharacters.filter { character ->
-                                location.residents.any { it.endsWith("/${character.id}") }
-                            }
-                            _residentCharacters.value = filteredCharacters
-                            Log.d("LocationDetailsViewModel", "Filtered characters: $filteredCharacters")
-                        }
-                    } catch (cacheException: Exception) {
-                        _errorMessage.value = "Error loading cached location details: ${cacheException.message}"
-                        Log.e("LocationDetailsViewModel", "Error loading cached location details", cacheException)
-                    }
+                    handleNetworkError(id, e)
                 }
+            }
+        }
+    }
+
+    private suspend fun fetchLocationFromApi(id: Int) {
+        Log.d("LocationDetailsViewModel", "Fetching location from API for ID: $id")
+        val location = repository.getLocation(id)
+        _location.value = location
+
+        Log.d("LocationDetailsViewModel", "Fetched location: $location")
+
+        val characterUrls = location.residents
+        val characters = repository.getCharactersByUrls(characterUrls)
+        _residentCharacters.value = characters
+
+        repository.saveLocationsToDatabase(listOf(location))
+        repository.saveCharactersToDatabase(characters)
+    }
+
+    private fun handleNetworkError(id: Int, e: Exception) {
+        Log.e("LocationDetailsViewModel", "Error fetching location details", e)
+        _errorMessage.value = "Error fetching location details: ${e.message}"
+
+        tryLoadFromCache(id)
+    }
+
+    private fun tryLoadFromCache(id: Int) {
+        viewModelScope.launch {
+            try {
+                Log.d("LocationDetailsViewModel", "Loading location from cache for ID: $id")
+                val cachedLocations = repository.getCachedLocations()
+                val cachedLocation = cachedLocations.find { it.id == id }
+                _location.value = cachedLocation
+
+                cachedLocation?.let { location ->
+                    val cachedCharacters = repository.getCachedCharacters()
+                    val filteredCharacters = cachedCharacters.filter { character ->
+                        location.residents.any { it.endsWith("/${character.id}") }
+                    }
+                    _residentCharacters.value = filteredCharacters
+                }
+            } catch (cacheException: Exception) {
+                _errorMessage.value = "Error loading cached location details: ${cacheException.message}"
+                Log.e("LocationDetailsViewModel", "Error loading cached location details", cacheException)
             }
         }
     }
