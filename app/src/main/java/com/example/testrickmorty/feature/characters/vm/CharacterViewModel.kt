@@ -18,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CharacterViewModel @Inject constructor(
     private val repository: Repository,
-    @ApplicationContext private val context: Context) : ViewModel() {
+    @ApplicationContext private val context: Context
+) : ViewModel() {
 
     private val _characters = MutableLiveData<List<Character>>()
     val characters: LiveData<List<Character>> get() = _characters
@@ -44,7 +45,6 @@ class CharacterViewModel @Inject constructor(
 
     fun fetchCharacters(page: Int) {
         if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
-            Log.d("CharacterViewModel", "Fetch request ignored for page $page: already loading or last page")
             return
         }
 
@@ -53,37 +53,10 @@ class CharacterViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val fetchedCharacters = if (NetworkUtils.hasNetwork(context)) {
-                    val charactersFromApi = repository.getCharacters(page)
-                    repository.saveCharactersToDatabase(charactersFromApi)
-                    charactersFromApi
-                } else {
-                    Log.d("CharacterViewModel", "Network unavailable, loading cached characters")
-                    repository.getCachedCharacters()
-                }
-
-                val currentCharacters = if (page == 1) {
-                    fetchedCharacters
-                } else {
-                    _characters.value.orEmpty().toMutableList().apply { addAll(fetchedCharacters) }
-                }
-                _characters.value = currentCharacters.distinctBy { it.id }
-
-                currentPage = page
-                isLastPage = fetchedCharacters.isEmpty()
-                Log.d("CharacterViewModel", "Fetched characters: ${fetchedCharacters.size} items")
-            } catch (e: HttpException) {
-                Log.e("CharacterViewModel", "HTTP error fetching characters: ${e.message()}", e)
-                if (e.code() == 404) {
-                    isLastPage = true
-                } else {
-                    _errorMessage.value = "Error fetching characters: ${e.message()}"
-                    Log.e("CharacterViewModel", "Error fetching characters", e)
-                }
-                loadCachedCharacters()
+                val fetchedCharacters = fetchCharactersFromSource(page)
+                updateCharactersList(fetchedCharacters, page)
             } catch (e: Exception) {
-                _errorMessage.value = "Error fetching characters: ${e.message}"
-                Log.e("CharacterViewModel", "Error fetching characters", e)
+                handleFetchError(e)
                 loadCachedCharacters()
             } finally {
                 _isLoading.value = false
@@ -92,31 +65,60 @@ class CharacterViewModel @Inject constructor(
         }
     }
 
+    private suspend fun fetchCharactersFromSource(page: Int): List<Character> {
+        return if (NetworkUtils.hasNetwork(context)) {
+            val charactersFromApi = repository.getCharacters(page)
+            repository.saveCharactersToDatabase(charactersFromApi)
+            charactersFromApi
+        } else {
+            repository.getCachedCharacters()
+        }
+    }
 
-    private fun loadCachedCharacters() {
-        viewModelScope.launch {
-            try {
-                Log.d("CharacterViewModel", "Loading cached characters, filtering: $isFiltering")
+    private fun updateCharactersList(fetchedCharacters: List<Character>, page: Int) {
+        val currentCharacters = if (page == 1) {
+            fetchedCharacters
+        } else {
+            _characters.value.orEmpty().toMutableList().apply { addAll(fetchedCharacters) }
+        }
+        _characters.value = currentCharacters.distinctBy { it.id }
+        currentPage = page
+        isLastPage = fetchedCharacters.isEmpty()
+    }
 
-                val cachedCharacters = if (isFiltering) {
-                    repository.getFilteredCachedCharacters(
-                        filterName ?: "",
-                        filterStatus ?: "",
-                        filterSpecies ?: "",
-                        filterGender ?: ""
-                    )
+    private fun handleFetchError(e: Exception) {
+        when (e) {
+            is HttpException -> {
+                if (e.code() == 404) {
+                    isLastPage = true
                 } else {
-                    repository.getCachedCharacters()
+                    _errorMessage.value = "Error fetching characters: ${e.message()}"
                 }
-                _characters.value = cachedCharacters
-                Log.d("CharacterViewModel", "Loaded cached characters: ${cachedCharacters.size} items")
-            } catch (cacheException: Exception) {
-                _errorMessage.value = "Error loading cached characters: ${cacheException.message}"
-                Log.e("CharacterViewModel", "Error loading cached characters", cacheException)
+            }
+            else -> {
+                _errorMessage.value = "Error fetching characters: ${e.message}"
             }
         }
     }
 
+    private fun loadCachedCharacters() {
+        viewModelScope.launch {
+            try {
+                _characters.value = if (isFiltering) {
+                    repository.getFilteredCachedCharacters(
+                        filterName.orEmpty(),
+                        filterStatus.orEmpty(),
+                        filterSpecies.orEmpty(),
+                        filterGender.orEmpty()
+                    )
+                } else {
+                    repository.getCachedCharacters()
+                }
+            } catch (cacheException: Exception) {
+                _errorMessage.value = "Error loading cached characters: ${cacheException.message}"
+            }
+        }
+    }
 
     fun fetchNextPage() {
         if (isFiltering) {
@@ -129,11 +131,11 @@ class CharacterViewModel @Inject constructor(
     fun searchCharacters(query: String) {
         currentSearchQuery = query
         isFiltering = query.isNotBlank()
-        _isLoading.value = true // Show loading indicator
+        _isLoading.value = true
         viewModelScope.launch {
             try {
                 if (NetworkUtils.hasNetwork(context)) {
-                    fetchFilteredCharacters(name = query, status = "", species = "", gender = "",page = 1)
+                    fetchFilteredCharacters(name = query, status = "", species = "", gender = "", page = 1)
                 } else {
                     val filteredCharacters = repository.getFilteredCachedCharacters(name = query, status = "", species = "", gender = "")
                     _characters.value = filteredCharacters
@@ -142,16 +144,12 @@ class CharacterViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Error searching characters: ${e.message}"
             } finally {
-                _isLoading.value = false // Hide loading indicator
+                _isLoading.value = false
             }
         }
     }
 
-
     fun fetchFilteredCharacters(name: String, status: String, species: String, gender: String, page: Int = 1) {
-        Log.d("CharacterViewModel", "Fetching filtered characters: Name=$name, Status=$status, Species=$species, Gender=$gender, Page=$page")
-        _isLoading.value = true
-        _isLoading.value = true
         isFiltering = true
         currentPage = page
         isLastPage = false
@@ -160,64 +158,47 @@ class CharacterViewModel @Inject constructor(
         filterSpecies = species
         filterGender = gender
         pageLoadingStates.clear()
+        _isLoading.value = true
 
         viewModelScope.launch {
             try {
-                if (NetworkUtils.hasNetwork(context)) {
-                    val dataFromApi = repository.getFilteredCharacters(name, status, species, gender, page)
-                    repository.saveFilteredCharactersToDatabase(name, status, species, gender, dataFromApi)
-                    _characters.value = dataFromApi.distinctBy { it.id }
-                } else {
-                    val filteredCharacters = repository.getFilteredCachedCharacters(name, status, species, gender)
-                    _characters.value = filteredCharacters
-                }
-
-                _noResults.value = _characters.value?.isEmpty() ?: true
-                Log.d("CharacterViewModel", "Fetched filtered characters: ${_characters.value?.size} items")
-
+                val dataFromApi = fetchFilteredCharactersFromSource(name, status, species, gender, page)
+                _characters.value = dataFromApi.distinctBy { it.id }
+                _noResults.value = dataFromApi.isEmpty()
             } catch (e: Exception) {
                 _errorMessage.value = "Error filtering characters: ${e.message}"
                 _characters.value = emptyList()
                 _noResults.value = true
-                Log.e("CharacterViewModel", "Error filtering characters", e)
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
+    private suspend fun fetchFilteredCharactersFromSource(name: String, status: String, species: String, gender: String, page: Int): List<Character> {
+        return if (NetworkUtils.hasNetwork(context)) {
+            val dataFromApi = repository.getFilteredCharacters(name, status, species, gender, page)
+            repository.saveFilteredCharactersToDatabase(name, status, species, gender, dataFromApi)
+            dataFromApi
+        } else {
+            repository.getFilteredCachedCharacters(name, status, species, gender)
+        }
+    }
 
     private fun fetchFilteredCharactersNextPage(page: Int) {
         if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
-            Log.d("CharacterViewModel", "Fetch next page request ignored: already loading or last page")
             return
         }
 
         pageLoadingStates[page] = true
         _isLoading.value = true
+
         viewModelScope.launch {
             try {
-                Log.d("CharacterViewModel", "Fetching filtered characters for page: $page")
                 val fetchedCharacters = repository.getFilteredCharacters(filterName!!, filterStatus!!, filterSpecies!!, filterGender!!, page)
-
-                val currentCharacters = _characters.value.orEmpty().toMutableList().apply { addAll(fetchedCharacters) }
-                _characters.value = currentCharacters.distinctBy { it.id }
-
-                currentPage = page
-                isLastPage = fetchedCharacters.isEmpty()
-                Log.d("CharacterViewModel", "Fetched filtered characters for page $page: ${fetchedCharacters.size} items")
-            } catch (e: HttpException) {
-                Log.e("CharacterViewModel", "HTTP error fetching filtered characters: ${e.message()}", e)
-                if (e.code() == 404) {
-                    isLastPage = true
-                } else {
-                    Log.e("CharacterViewModel", "Error fetching filtered characters: ${e.message}", e)
-                    _errorMessage.value = "Error fetching filtered characters: ${e.message()}"
-                    Log.e("CharacterViewModel", "Error fetching filtered characters", e)
-                }
+                updateCharactersList(fetchedCharacters, page)
             } catch (e: Exception) {
-                _errorMessage.value = "Error fetching filtered characters: ${e.message}"
-                Log.e("CharacterViewModel", "Error fetching filtered characters", e)
+                handleFetchError(e)
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
