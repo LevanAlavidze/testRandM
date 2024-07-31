@@ -1,6 +1,5 @@
 package com.example.testrickmorty.feature.location_details.vm
 
-import android.util.Log
 import androidx.lifecycle.*
 import com.example.testrickmorty.feature.locations.models.Location
 import com.example.testrickmorty.data.Repository
@@ -42,35 +41,26 @@ class LocationDetailsViewModel @Inject constructor(
     }
 
     private suspend fun fetchLocationFromApi(id: Int) {
-        Log.d("LocationDetailsViewModel", "Fetching location from API for ID: $id")
         val location = repository.getLocation(id)
         _location.value = location
-
-        Log.d("LocationDetailsViewModel", "Fetched location: $location")
-
         val characterUrls = location.residents
         val characters = repository.getCharactersByUrls(characterUrls)
         _residentCharacters.value = characters
-
         repository.saveLocationsToDatabase(listOf(location))
         repository.saveCharactersToDatabase(characters)
     }
 
     private fun handleNetworkError(id: Int, e: Exception) {
-        Log.e("LocationDetailsViewModel", "Error fetching location details", e)
         _errorMessage.value = "Error fetching location details: ${e.message}"
-
         tryLoadFromCache(id)
     }
 
     private fun tryLoadFromCache(id: Int) {
         viewModelScope.launch {
             try {
-                Log.d("LocationDetailsViewModel", "Loading location from cache for ID: $id")
                 val cachedLocations = repository.getCachedLocations()
                 val cachedLocation = cachedLocations.find { it.id == id }
                 _location.value = cachedLocation
-
                 cachedLocation?.let { location ->
                     val cachedCharacters = repository.getCachedCharacters()
                     val filteredCharacters = cachedCharacters.filter { character ->
@@ -80,7 +70,6 @@ class LocationDetailsViewModel @Inject constructor(
                 }
             } catch (cacheException: Exception) {
                 _errorMessage.value = "Error loading cached location details: ${cacheException.message}"
-                Log.e("LocationDetailsViewModel", "Error loading cached location details", cacheException)
             }
         }
     }
