@@ -44,17 +44,6 @@ interface ApiService {
     @GET("episode/{id}")
     suspend fun getEpisode(@Path("id") episodeId: Int): Response<Episode>
 
-    @GET("episode")
-    suspend fun searchEpisodes(@Query("name") query: String): EpisodeResponse
-
-    @GET("episode")
-    suspend fun filterEpisodes(@Query("episode") season: String): EpisodeResponse
-
-    @GET("character")
-    suspend fun searchCharacters(@Query("name") query: String): CharacterResponse
-
-    @GET("location")
-    suspend fun searchLocations(@Query("name") query: String): LocationResponse
 
     @GET("character")
     suspend fun getFilteredCharacters(

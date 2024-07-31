@@ -30,12 +30,11 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
     private var currentPage = 1
     private var isLastPage = false
     private var currentSearchQuery: String? = null
-    private val pageLoadingStates = mutableMapOf<Int, Boolean>()
     private var isFiltering = false
     private var filterName: String = ""
     private var filterType: String = ""
     private var filterDimension: String = ""
-
+    private val pageLoadingStates = mutableMapOf<Int, Boolean>()
 
     fun fetchLocations(page: Int) {
         if (isLoading.value == true || isLastPage || pageLoadingStates[page] == true) {
@@ -47,32 +46,19 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
         viewModelScope.launch {
             try {
                 val fetchedLocations = repository.getLocations(page)
-
                 val currentLocations = if (page == 1) {
                     fetchedLocations
-                }else{
-                    _locations.value.orEmpty().toMutableList().apply {addAll(fetchedLocations)}
+                } else {
+                    _locations.value.orEmpty().toMutableList().apply { addAll(fetchedLocations) }
                 }
                 _locations.value = currentLocations.distinctBy { it.id }
-
                 currentPage = page
                 isLastPage = fetchedLocations.isEmpty()
-
-                // Save fetched locations to the database
                 repository.saveLocationsToDatabase(fetchedLocations)
             } catch (e: HttpException) {
-                if (e.code() == 404) {
-                    isLastPage = true
-                } else {
-                    _errorMessage.value = "Error fetching locations: ${e.message()}"
-                    Log.e("LocationsViewModel", "Error fetching locations", e)
-                }
-                // Load cached data as fallback
-                loadCachedLocations()
-            }catch (e: Exception) {
-                _errorMessage.value = "Error fetching locations: ${e.message}"
-                Log.e("LocationsViewModel", "Error fetching locations", e)
-                loadCachedLocations()
+                handleNetworkError(e)
+            } catch (e: Exception) {
+                handleGenericError(e)
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
@@ -80,20 +66,31 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
         }
     }
 
-    private fun loadCachedLocations(){
+    private fun handleNetworkError(e: HttpException) {
+        if (e.code() == 404) {
+            isLastPage = true
+        } else {
+            _errorMessage.value = "Error fetching locations: ${e.message()}"
+            Log.e("LocationsViewModel", "Error fetching locations", e)
+        }
+        loadCachedLocations()
+    }
+
+    private fun handleGenericError(e: Exception) {
+        _errorMessage.value = "Error fetching locations: ${e.message}"
+        Log.e("LocationsViewModel", "Error fetching locations", e)
+        loadCachedLocations()
+    }
+
+    private fun loadCachedLocations() {
         viewModelScope.launch {
             try {
                 val cachedLocations = repository.getCachedLocations()
                 _locations.value = cachedLocations
-                Log.d(
-                    "LocationsViewModel",
-                    "Loaded cached locations: ${cachedLocations.size} items"
-                )
-            }catch (cacheException: Exception) {
+                Log.d("LocationsViewModel", "Loaded cached locations: ${cachedLocations.size} items")
+            } catch (cacheException: Exception) {
                 _errorMessage.value = "Error loading cached locations: ${cacheException.message}"
-                Log.e(
-                    "LocationsViewModel",
-                    "Error loading cached locations: ${cacheException.message}")
+                Log.e("LocationsViewModel", "Error loading cached locations", cacheException)
             }
         }
     }
@@ -109,7 +106,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
     fun searchLocations(query: String) {
         currentSearchQuery = query
         isFiltering = query.isNotBlank()
-        fetchFilteredLocations(query,"","",1)
+        fetchFilteredLocations(query, "", "", 1)
     }
 
     fun fetchFilteredLocations(name: String, type: String, dimension: String, page: Int = 1) {
@@ -124,8 +121,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
 
         viewModelScope.launch {
             try {
-                val filteredLocations = repository.getFilteredLocations(
-                    name, type, dimension, page)
+                val filteredLocations = repository.getFilteredLocations(name, type, dimension, page)
                 if (filteredLocations.isEmpty()) {
                     _noResults.value = true
                     _locations.value = emptyList()
@@ -133,18 +129,17 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
                     val currentLocations = if (page == 1) {
                         filteredLocations
                     } else {
-                        _locations.value.orEmpty().toMutableList()
-                            .apply { addAll(filteredLocations) }
+                        _locations.value.orEmpty().toMutableList().apply { addAll(filteredLocations) }
                     }
                     _locations.value = currentLocations.distinctBy { it.id }
                     _noResults.value = false
                 }
-            }catch (e: Exception) {
+            } catch (e: Exception) {
                 _errorMessage.value = "Error fetching locations: ${e.message}"
                 Log.e("LocationsViewModel", "Error fetching locations", e)
                 _locations.value = emptyList()
                 _noResults.value = true
-            }finally {
+            } finally {
                 _isLoading.value = false
             }
         }
@@ -158,25 +153,14 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
         _isLoading.value = true
         viewModelScope.launch {
             try {
-                val response =
-                    repository.getFilteredLocations(filterName, filterType, filterDimension, page)
-
+                val response = repository.getFilteredLocations(filterName, filterType, filterDimension, page)
                 val currentLocations = _locations.value.orEmpty().toMutableList()
                 currentLocations.addAll(response)
                 _locations.value = currentLocations.distinctBy { it.id }
-
                 currentPage = page
                 isLastPage = response.isEmpty()
-            } catch (e: HttpException) {
-                if (e.code() == 404) {
-                    isLastPage = true
-                } else {
-                    _errorMessage.value = "Error fetching locations: ${e.message()}"
-                    Log.e("LocationsViewModel", "Error fetching locations", e)
-                }
             } catch (e: Exception) {
-                _errorMessage.value = "Error fetching locations: ${e.message}"
-                Log.e("LocationsViewModel", "Error fetching locations", e)
+                handleGenericError(e)
             } finally {
                 _isLoading.value = false
                 pageLoadingStates[page] = false
@@ -184,10 +168,3 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
         }
     }
 }
-
-
-
-
-
-
-
