@@ -65,6 +65,7 @@ class CharacterViewModel @Inject constructor(
         }
     }
 
+
     private suspend fun fetchCharactersFromSource(page: Int): List<Character> {
         return if (NetworkUtils.hasNetwork(context)) {
             val charactersFromApi = repository.getCharacters(page)

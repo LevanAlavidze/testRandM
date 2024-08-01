@@ -45,7 +45,18 @@ class LocationsFragment : Fragment(R.layout.fragment_locations) {
         }
         binding.locationRecyclerView.layoutManager = GridLayoutManager(context, 2)
         binding.locationRecyclerView.adapter = adapter
+        binding.locationRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition()
 
+                if (!viewModel.isLoading.value!! && !viewModel.isLastPage && lastVisibleItemPosition >= totalItemCount - 1) {
+                    viewModel.fetchNextPage()
+                }
+            }
+        })
         binding.btnFilter.setOnClickListener {
             showFilterDialog()
         }

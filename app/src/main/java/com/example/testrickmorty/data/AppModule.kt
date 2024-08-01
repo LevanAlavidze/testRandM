@@ -17,10 +17,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
     @Provides
     @Singleton
     fun provideApplicationContext(app: Application): Context = app.applicationContext
-
 
     @Provides
     @Singleton
@@ -62,8 +62,8 @@ object AppModule {
         characterDao: CharacterDao,
         locationDao: LocationDao,
         episodeDao: EpisodeDao,
-        app: Application
+        context: Application
     ): Repository {
-        return Repository(apiService, characterDao, locationDao, episodeDao, app)
+        return RepositoryImpl(apiService, characterDao, locationDao, episodeDao, context)
     }
 }

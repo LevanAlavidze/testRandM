@@ -28,7 +28,7 @@ class LocationsViewModel @Inject constructor(private val repository: Repository)
     val noResults: LiveData<Boolean> get() = _noResults
 
     private var currentPage = 1
-    private var isLastPage = false
+    var isLastPage = false
     private var currentSearchQuery: String? = null
     private var isFiltering = false
     private var filterName: String = ""
