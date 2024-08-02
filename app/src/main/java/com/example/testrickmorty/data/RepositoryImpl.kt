@@ -130,7 +130,7 @@ class RepositoryImpl @Inject constructor(
     }
 
     // Filtering
-    override suspend fun getFilteredCharacters(name: String, status: String, species: String, gender: String, page: Int): List<Character> {
+    override suspend fun getFilteredCharacters(name: String, status: String,  gender: String, species: String, page: Int): List<Character> {
         Log.d("Repository", "Fetching filtered characters from API with: Name=$name, Status=$status, Species=$species, Gender=$gender, Page=$page")
         return if (NetworkUtils.hasNetwork(context)) {
             // Fetch from API
